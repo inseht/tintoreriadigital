@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'buscar.dart';
+import 'crearnota.dart';
 
 void main() {
-  runApp(MainApp());
+  runApp(const MainApp());
 }
 
 class MainApp extends StatelessWidget {
@@ -10,43 +12,33 @@ class MainApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      home: Scaffold(
-        body: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              ElevatedButton(
-                onPressed: () {
-                  print("ElevatedButton pressed");
-                },
-                child: Text('ElevatedButton'),
-              ),
-              ElevatedButton(
-                onPressed: () {
-                  print("ElevatedButton2 pressed");
-                },
-                child: Text('ElevatedButton'),
-              ),
-              ElevatedButton(
-                onPressed: () {
-                  print("ElevatedButton3 pressed");
-                },
-                child: Text('ElevatedButton'),
-              ),     
-                            ElevatedButton(
-                onPressed: () {
-                  print("ElevatedButton3 pressed");
-                },
-                child: Text('ElevatedButton'),
-              ),     
-                            ElevatedButton(
-                onPressed: () {
-                  print("ElevatedButton3 pressed");
-                },
-                child: Text('ElevatedButton'),
-              ),             
-            ],
-          ),
+      home: HomeScreen(), // Mueve la estructura del Scaffold a una nueva clase
+    );
+  }
+}
+
+class HomeScreen extends StatelessWidget {
+  const HomeScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            ElevatedButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => CrearNota()
+                    ),
+                );
+              },
+              child: const Text('Ir a Buscar'),
+            ),
+          ],
         ),
       ),
     );
