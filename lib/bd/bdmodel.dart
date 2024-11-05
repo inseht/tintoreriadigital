@@ -89,9 +89,6 @@ class DatabaseHelper {
       INSERT INTO Cliente_temp (idCliente, nombreCliente, telefonoCliente)
       SELECT idCliente, nombreCliente, telefonoCliente FROM Cliente
     ''');
-
-    await db.execute('DROP TABLE Cliente');
-    await db.execute('ALTER TABLE Cliente_temp RENAME TO Cliente');
   }
 
   Future<void> _migrateDetallesPedidoTable(Database db) async {
