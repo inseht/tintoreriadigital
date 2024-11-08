@@ -1,6 +1,9 @@
+
 import 'package:flutter/material.dart';
 
-class Buscar extends StatelessWidget {
+class Prioridades extends StatelessWidget {
+  const Prioridades({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(

@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 class CrearNota extends StatelessWidget {
   final _formKey = GlobalKey<FormState>();
 
+  CrearNota({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -45,7 +47,6 @@ class CrearNota extends StatelessWidget {
               ElevatedButton(
                 onPressed: () {
                   if (_formKey.currentState!.validate()) {
-                    // Realiza alguna acción cuando el formulario es válido
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(content: Text('Formulario enviado')),
                     );
