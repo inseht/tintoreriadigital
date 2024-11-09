@@ -69,23 +69,23 @@ class Proveedores extends StatelessWidget {
               ),
             ],
           ),
-          // for (var proveedor in proveedores)
-          //   TableRow(
-          //     children: [
-          //       Padding(
-          //         padding: const EdgeInsets.all(8.0),
-          //         child: Text(proveedor['idProveedor'].toString()),
-          //       ),
-          //       Padding(
-          //         padding: const EdgeInsets.all(8.0),
-          //         child: Text(proveedor['nombreProveedor'] ?? 'N/A'),
-          //       ),
-          //       Padding(
-          //         padding: const EdgeInsets.all(8.0),
-          //         child: Text(proveedor['contactoProveedor1'] ?? 'N/A'),
-          //       ),
-          //     ],
-          //   ),
+          for (var proveedor in proveedores)
+            TableRow(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Text(proveedor['idProveedor'].toString()),
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Text(proveedor['nombreProveedor'] ?? 'N/A'),
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Text(proveedor['contactoProveedor1'] ?? 'N/A'),
+                ),
+              ],
+            ),
         ],
       ),
     );

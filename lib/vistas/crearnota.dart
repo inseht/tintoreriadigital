@@ -1,57 +1,181 @@
 import 'package:flutter/material.dart';
-import 'package:sqflite_common_ffi/sqflite_ffi.dart';
-class CrearNota extends StatelessWidget {
-  final _formKey = GlobalKey<FormState>();
+import 'package:syncfusion_flutter_datepicker/datepicker.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import '../bloc/crearNotaBloc.dart';
 
-  CrearNota({super.key});
+class CrearNota extends StatefulWidget {
+  const CrearNota({super.key});
+
+  @override
+  State<CrearNota> createState() => _CrearNotaState();
+}
+
+class _CrearNotaState extends State<CrearNota> {
+  final _formKey = GlobalKey<FormState>();
+  final TextEditingController _nombreClienteController = TextEditingController();
+  final TextEditingController _telefonoClienteController = TextEditingController();
+  final TextEditingController _importeController = TextEditingController();
+  final TextEditingController _estadoPagoController = TextEditingController();
+  final TextEditingController _prioridadController = TextEditingController();
+  final TextEditingController _observacionesController = TextEditingController();
+  final TextEditingController _estadoController = TextEditingController();
+  
+  String _fechaRecibido = '';
+  String _fechaEstimada = '';
+
+void _seleccionarFechaRecibido() async {
+  await showDialog(
+    context: context,
+    builder: (context) => AlertDialog(
+      contentPadding: EdgeInsets.zero,
+      content: SizedBox(
+        height: 300,
+        width: 300,
+        child: Container(
+          child: SfDateRangePicker(
+            onSelectionChanged: (DateRangePickerSelectionChangedArgs args) {
+              setState(() {
+                _fechaRecibido = (args.value as DateTime).toString().split(' ')[0];
+              });
+              Navigator.pop(context);
+            },
+          ),
+        ),
+      ),
+    ),
+  );
+}
+
+
+void _seleccionarFechaEstimada() async {
+  await showDialog(
+    context: context,
+    builder: (context) => AlertDialog(
+      contentPadding: EdgeInsets.zero,
+      content: SizedBox(
+        height: 300,
+        width: 300,
+        child: Container(
+          child: SfDateRangePicker(
+            onSelectionChanged: (DateRangePickerSelectionChangedArgs args) {
+              setState(() {
+                _fechaEstimada = (args.value as DateTime).toString().split(' ')[0];
+              });
+              Navigator.pop(context);
+            },
+          ),
+        ),
+      ),
+    ),
+  );
+}
+
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              TextFormField(
-                decoration: const InputDecoration(
-                  labelText: 'Nombre',
-                  border: OutlineInputBorder(),
+    return BlocProvider(
+      create: (_) => CrearNotaBloc(),
+      child: Scaffold(
+        appBar: AppBar(title: const Text('Crear Nota')),
+        body: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              children: [
+                TextFormField(
+                  controller: _nombreClienteController,
+                  decoration: const InputDecoration(
+                    labelText: 'Nombre del Cliente',
+                  ),
                 ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Por favor ingresa un nombre';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                decoration: const InputDecoration(
-                  labelText: 'Correo electrónico',
-                  border: OutlineInputBorder(),
+                const SizedBox(height: 16),
+                TextFormField(
+                  controller: _telefonoClienteController,
+                  decoration: const InputDecoration(
+                    labelText: 'Teléfono del Cliente',
+                  ),
                 ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Por favor ingresa un correo';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
-              ElevatedButton(
-                onPressed: () {
-                  if (_formKey.currentState!.validate()) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Formulario enviado')),
-                    );
-                  }
-                },
-                child: const Text('Enviar'),
-              ),
-            ],
+                const SizedBox(height: 16),
+                ElevatedButton(
+                  onPressed: _seleccionarFechaRecibido,
+                  child: Text(_fechaRecibido.isEmpty
+                      ? 'Seleccionar Fecha Recibido'
+                      : 'Fecha Recibido: $_fechaRecibido'),
+                ),
+                const SizedBox(height: 16),
+                ElevatedButton(
+                  onPressed: _seleccionarFechaEstimada,
+                  child: Text(_fechaEstimada.isEmpty
+                      ? 'Seleccionar Fecha Estimada'
+                      : 'Fecha Estimada: $_fechaEstimada'),
+                ),
+                const SizedBox(height: 16),
+                TextFormField(
+                  controller: _importeController,
+                  decoration: const InputDecoration(
+                    labelText: 'Importe',
+                  ),
+                ),
+                const SizedBox(height: 16),
+                TextFormField(
+                  controller: _estadoPagoController,
+                  decoration: const InputDecoration(
+                    labelText: 'Estado del Pago',
+                  ),
+                ),
+                const SizedBox(height: 16),
+                TextFormField(
+                  controller: _prioridadController,
+                  decoration: const InputDecoration(
+                    labelText: 'Prioridad',
+                  ),
+                ),
+                const SizedBox(height: 16),
+                TextFormField(
+                  controller: _observacionesController,
+                  decoration: const InputDecoration(
+                    labelText: 'Observaciones',
+                  ),
+                ),
+                const SizedBox(height: 16),
+                TextFormField(
+                  controller: _estadoController,
+                  decoration: const InputDecoration(
+                    labelText: 'Estado',
+                  ),
+                ),
+                const SizedBox(height: 16),
+                ElevatedButton(
+  onPressed: () {
+    final nombreCliente = _nombreClienteController.text;
+    final telefonoCliente = _telefonoClienteController.text;
+    final importe = _importeController.text;
+    final estadoPago = _estadoPagoController.text;
+    final prioridad = _prioridadController.text;
+    final observaciones = _observacionesController.text;
+    final estado = _estadoController.text;
+
+    // Agregar evento de validación
+    context.read<CrearNotaBloc>().add(
+      ValidarFormulario(
+        nombreCliente: nombreCliente,
+        telefonoCliente: telefonoCliente,
+        fechaRecibido: _fechaRecibido,
+        fechaEstimada: _fechaEstimada,
+        importe: importe,
+        estadoPago: estadoPago,
+        prioridad: prioridad,
+        observaciones: observaciones,
+        estado: estado,
+      ),
+    );
+  },
+  child: const Text('Guardar Nota'),
+)
+
+              ],
+            ),
           ),
         ),
       ),

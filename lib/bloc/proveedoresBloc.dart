@@ -18,12 +18,10 @@ class ProveedoresError extends ProveedoresState {
   ProveedoresError(this.error);
 }
 
-// Eventos del BLoC
 abstract class ProveedoresEvent {}
 
 class ObtenerProveedores extends ProveedoresEvent {}
 
-// BLoC de Proveedores
 class ProveedoresBloc extends Bloc<ProveedoresEvent, ProveedoresState> {
   final ProveedoresRepositorio proveedoresRepositorio;
 
