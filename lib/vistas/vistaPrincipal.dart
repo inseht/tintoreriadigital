@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'buscar.dart';
-import 'crearnota.dart';
+import 'crearNota.dart';
 import 'prioridades.dart';
 import 'proveedores.dart';
 
@@ -19,13 +19,6 @@ class _MainViewState extends State<MainView> with SingleTickerProviderStateMixin
     super.initState();
     _tabController = TabController(length: 4, vsync: this);
   }
-
-  @override
-  void dispose() {
-    _tabController.dispose();
-    super.dispose();
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(

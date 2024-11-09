@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 class CrearNota extends StatelessWidget {
   final _formKey = GlobalKey<FormState>();
 
@@ -8,9 +8,6 @@ class CrearNota extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('its me, hi'),
-      ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Form(
