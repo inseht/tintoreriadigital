@@ -15,6 +15,7 @@ dependencies:
   flutter_bloc: ^8.1.1
   path_provider: ^2.1.5
   syncfusion_flutter_datepicker: ^27.1.58
+  roundcheckbox: ^2.0.5
 
 dev_dependencies:
   flutter_test:

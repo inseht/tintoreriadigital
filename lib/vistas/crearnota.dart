@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:syncfusion_flutter_datepicker/datepicker.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../bloc/crearNotaBloc.dart';
+import 'package:roundcheckbox/roundcheckbox.dart';
 
 class CrearNota extends StatefulWidget {
   const CrearNota({super.key});
@@ -33,13 +34,25 @@ void _seleccionarFechaRecibido() async {
         width: 300,
         child: Container(
           child: SfDateRangePicker(
-            onSelectionChanged: (DateRangePickerSelectionChangedArgs args) {
-              setState(() {
-                _fechaRecibido = (args.value as DateTime).toString().split(' ')[0];
-              });
-              Navigator.pop(context);
-            },
-          ),
+  selectionMode: DateRangePickerSelectionMode.range, // Permite seleccionar un rango
+  initialSelectedRange: PickerDateRange(
+    DateTime.now().subtract(const Duration(days: 4)), // Fecha inicial
+    DateTime.now().add(const Duration(days: 3)), // Fecha final
+  ),
+  onSelectionChanged: (DateRangePickerSelectionChangedArgs args) {
+    if (args.value is PickerDateRange) {
+      final DateTime startDate = args.value.startDate;
+      final DateTime? endDate = args.value.endDate;
+
+      // Actualizar las fechas seleccionadas (opcional)
+      setState(() {
+        _fechaRecibido = startDate.toString().split(' ')[0];
+        _fechaEstimada = (endDate ?? startDate).toString().split(' ')[0];
+      });
+    }
+  },
+),
+
         ),
       ),
     ),
@@ -76,7 +89,6 @@ void _seleccionarFechaEstimada() async {
     return BlocProvider(
       create: (_) => CrearNotaBloc(),
       child: Scaffold(
-        appBar: AppBar(title: const Text('Crear Nota')),
         body: Padding(
           padding: const EdgeInsets.all(16.0),
           child: Form(
@@ -138,6 +150,7 @@ void _seleccionarFechaEstimada() async {
                     labelText: 'Observaciones',
                   ),
                 ),
+                
                 const SizedBox(height: 16),
                 TextFormField(
                   controller: _estadoController,
@@ -145,6 +158,16 @@ void _seleccionarFechaEstimada() async {
                     labelText: 'Estado',
                   ),
                 ),
+            const SizedBox(height: 12),
+                          Text(
+                            'Prioridad',
+                          ),
+            RoundCheckBox(
+              onTap: (selected) {},
+              uncheckedColor: Colors.red,
+              uncheckedWidget: Icon(Icons.close, color: Colors.white),
+            ),
+
                 const SizedBox(height: 16),
                 ElevatedButton(
   onPressed: () {
@@ -156,7 +179,6 @@ void _seleccionarFechaEstimada() async {
     final observaciones = _observacionesController.text;
     final estado = _estadoController.text;
 
-    // Agregar evento de validación
     context.read<CrearNotaBloc>().add(
       ValidarFormulario(
         nombreCliente: nombreCliente,
