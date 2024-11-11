@@ -6,7 +6,6 @@ import 'dart:io';
 class BdModel {
   static Database? _db;
 
-  // Inicializar Base de Datos
   static Future<Database> inicializarBD() async {
     if (_db != null) return _db!;
 
@@ -15,7 +14,6 @@ class BdModel {
     Directory appDocDir = await getApplicationDocumentsDirectory();
     String dbPath = join(appDocDir.path, 'tintoreria.db');
 
-    // Abrir base de datos
     _db = await databaseFactory.openDatabase(dbPath, options: OpenDatabaseOptions(
       version: 1,
       onCreate: (db, version) async {
@@ -32,6 +30,7 @@ class BdModel {
             idDetalles INTEGER PRIMARY KEY AUTOINCREMENT,
             idNota INTEGER,
             tipoPrenda TEXT,
+            colorPrenda TEXT,
             cantidad INTEGER,
             precioUnitario REAL
           )

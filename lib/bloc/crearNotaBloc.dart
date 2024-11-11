@@ -1,5 +1,8 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+// Repositorio
+import '../repositorios/crearNotasRepositorio.dart';
+
 // Definir los eventos
 abstract class CrearNotaEvent {}
 
@@ -31,8 +34,38 @@ class ValidarFormulario extends CrearNotaEvent {
 // Evento para enviar el formulario
 class EnviarFormulario extends CrearNotaEvent {}
 
+// Evento para cargar opciones del Dropdown
+class CargarOpcionesDropdown extends CrearNotaEvent {}
+
+// Evento para seleccionar el estado de pago
+class CambiarEstadoPago extends CrearNotaEvent {
+  final String estadoPago;
+
+  CambiarEstadoPago({required this.estadoPago});
+}
+
 // Definir los estados
 abstract class CrearNotaState {}
+
+class EstadoInicial extends CrearNotaState {
+  final List<String> opcionesDropdown;
+  final String estadoPago;
+
+  EstadoInicial({
+    this.opcionesDropdown = const [],
+    this.estadoPago = 'Pendiente',
+  });
+
+  EstadoInicial copyWith({
+    List<String>? opcionesDropdown,
+    String? estadoPago,
+  }) {
+    return EstadoInicial(
+      opcionesDropdown: opcionesDropdown ?? this.opcionesDropdown,
+      estadoPago: estadoPago ?? this.estadoPago,
+    );
+  }
+}
 
 // Estado de formulario inválido con mensaje de error
 class FormularioInvalido extends CrearNotaState {
@@ -49,30 +82,42 @@ class FormularioEnviado extends CrearNotaState {}
 
 // Bloc
 class CrearNotaBloc extends Bloc<CrearNotaEvent, CrearNotaState> {
-  CrearNotaBloc() : super(FormularioInvalido('')) {
+  final CrearNotasRepositorio repositorio;
+
+  CrearNotaBloc({required this.repositorio}) : super(EstadoInicial()) {
     
     // Manejo del evento ValidarFormulario
-on<ValidarFormulario>((event, emit) {
-  if (event.nombreCliente.isEmpty ||
-      event.telefonoCliente.isEmpty ||
-      event.fechaRecibido.isEmpty ||
-      event.fechaEstimada.isEmpty ||
-      event.importe.isEmpty ||
-      event.estadoPago.isEmpty ||
-      event.prioridad.isEmpty ||
-      event.observaciones.isEmpty ||
-      event.estado.isEmpty) {
-    emit(FormularioInvalido('Todos los campos son obligatorios'));
-  } else {
-    emit(FormularioValido());
-  }
-});
-
+    on<ValidarFormulario>((event, emit) {
+      if (event.nombreCliente.isEmpty ||
+          event.telefonoCliente.isEmpty ||
+          event.fechaRecibido.isEmpty ||
+          event.fechaEstimada.isEmpty ||
+          event.importe.isEmpty ||
+          event.estadoPago.isEmpty ||
+          event.prioridad.isEmpty ||
+          event.observaciones.isEmpty ||
+          event.estado.isEmpty) {
+        emit(FormularioInvalido('Todos los campos son obligatorios'));
+      } else {
+        emit(FormularioValido());
+      }
+    });
 
     // Manejo del evento EnviarFormulario
     on<EnviarFormulario>((event, emit) async {
-      // Simulación de operación asincrónica (ejemplo: llamada a una API)
       emit(FormularioEnviado());
+    });
+
+    // Manejo del evento CargarOpcionesDropdown
+    on<CargarOpcionesDropdown>((event, emit) {
+      // Obtener opciones del repositorio
+      final opciones = repositorio.obtenerEstadosPago();
+      emit((state as EstadoInicial).copyWith(opcionesDropdown: opciones));
+    });
+
+    // Manejo del evento CambiarEstadoPago
+    on<CambiarEstadoPago>((event, emit) {
+      emit((state as EstadoInicial).copyWith(estadoPago: event.estadoPago));
     });
   }
 
