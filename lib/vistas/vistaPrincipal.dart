@@ -3,6 +3,7 @@ import 'buscar.dart';
 import 'crearNota.dart';
 import 'prioridades.dart';
 import 'proveedores.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class MainView extends StatefulWidget {
   const MainView({super.key});

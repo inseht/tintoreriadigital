@@ -58,9 +58,6 @@ class _CrearNotaState extends State<CrearNota> {
     repositorio: CrearNotasRepositorio(), 
   ),
       child: Scaffold(
-        appBar: AppBar(
-          title: const Text('Crear Nota'),
-        ),
         body: BlocListener<CrearNotaBloc, CrearNotaState>(
           listener: (context, state) {
             if (state is FormularioValido) {
@@ -167,7 +164,7 @@ class _CrearNotaState extends State<CrearNota> {
                             uncheckedColor: Colors.red,
                             uncheckedWidget: Icon(Icons.close, color: Colors.white),
                           ),
-                                          ],
+                            ],
                           ),
                         ),
                       ),
@@ -177,6 +174,9 @@ class _CrearNotaState extends State<CrearNota> {
                   Center(
                     child: ElevatedButton(
                       onPressed: () {
+
+                        
+
                         final nombreCliente = _nombreClienteController.text;
                         final telefonoCliente = _telefonoClienteController.text;
                         final importe = _importeController.text;
@@ -185,7 +185,6 @@ class _CrearNotaState extends State<CrearNota> {
                         final observaciones = _observacionesController.text;
                         final estado = _estadoController.text;
 
-                        // Enviar el evento de validación
                         context.read<CrearNotaBloc>().add(
                           ValidarFormulario(
                             nombreCliente: nombreCliente,

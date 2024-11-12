@@ -16,6 +16,8 @@ dependencies:
   path_provider: ^2.1.5
   syncfusion_flutter_datepicker: ^27.1.58
   roundcheckbox: ^2.0.5
+  appflowy_board: ^0.1.2
+  google_fonts: ^6.2.1
 
 dev_dependencies:
   flutter_test:

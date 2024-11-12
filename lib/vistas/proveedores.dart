@@ -65,7 +65,15 @@ class Proveedores extends StatelessWidget {
               ),
               Padding(
                 padding: EdgeInsets.all(8.0),
-                child: Text('Contacto 1', style: TextStyle(fontWeight: FontWeight.bold)),
+                child: Text('Razón', style: TextStyle(fontWeight: FontWeight.bold)),
+              ),
+              Padding(
+                padding: EdgeInsets.all(8.0),
+                child: Text('Contacto 2', style: TextStyle(fontWeight: FontWeight.bold)),
+              ),
+              Padding(
+                padding: EdgeInsets.all(8.0),
+                child: Text('Contacto 2', style: TextStyle(fontWeight: FontWeight.bold)),
               ),
             ],
           ),
@@ -82,7 +90,15 @@ class Proveedores extends StatelessWidget {
                 ),
                 Padding(
                   padding: const EdgeInsets.all(8.0),
+                  child: Text(proveedor['razonProveedor'] ?? 'N/A'),
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
                   child: Text(proveedor['contactoProveedor1'] ?? 'N/A'),
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Text(proveedor['contactoProveedor2'] ?? 'N/A'),
                 ),
               ],
             ),
