@@ -108,4 +108,25 @@ class BdModel {
     final db = await inicializarBD();
     await db.insert('Notas', notas);
   }
+
+  static Future<Map<String, List<Map<String, dynamic>>>> obtenerDatosDeTodasLasTablas() async {
+  final db = await inicializarBD();
+  
+  // Consultar datos de cada tabla
+  final clientes = await db.query('Cliente');
+  final detallesPedido = await db.query('DetallesPedido');
+  final notas = await db.query('Notas');
+  final proveedores = await db.query('Proveedores');
+  
+  await db.close();
+  
+  // Retornar los resultados organizados en un mapa
+  return {
+    'Clientes': clientes,
+    'DetallesPedido': detallesPedido,
+    'Notas': notas,
+    'Proveedores': proveedores,
+  };
+}
+
 }

@@ -25,6 +25,12 @@ class AppTheme {
       labelColor: Color.fromRGBO(96, 118, 124, 1),
       unselectedLabelColor: Color.fromRGBO(96, 118, 124, 1),
     ),
+    textTheme: const TextTheme(
+      titleLarge: TextStyle(
+        fontSize: 16,
+        color: Color.fromRGBO(96, 118, 124, 1),
+      ),
+    ),
   );
 
   // Modo oscuro

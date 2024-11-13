@@ -24,6 +24,16 @@ class _MainViewState extends State<MainView> with SingleTickerProviderStateMixin
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+title: Text(
+  'Tintorería Digital',
+  style: GoogleFonts.anton(
+    color: Colors.white,
+    fontSize:40,
+  ),
+),
+
+
+
         bottom: TabBar(
           controller: _tabController,
           tabs: const [
