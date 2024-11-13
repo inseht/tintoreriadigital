@@ -128,5 +128,33 @@ class BdModel {
     'Proveedores': proveedores,
   };
 }
+  // Método para actualizar un proveedor por su ID
+  static Future<void> actualizarProveedor(int idProveedor, Map<String, dynamic> proveedorActualizado) async {
+    final db = await inicializarBD();
+    
+    // Actualiza el proveedor con el id especificado
+    await db.update(
+      'Proveedores',
+      proveedorActualizado,
+      where: 'idProveedor = ?',
+      whereArgs: [idProveedor],
+    );
+    
+    await db.close();
+  }
+
+  // Método para eliminar un proveedor por su ID
+  static Future<void> eliminarProveedor(int idProveedor) async {
+    final db = await inicializarBD();
+    
+    // Elimina el proveedor con el id especificado
+    await db.delete(
+      'Proveedores',
+      where: 'idProveedor = ?',
+      whereArgs: [idProveedor],
+    );
+    
+    await db.close();
+  }
 
 }

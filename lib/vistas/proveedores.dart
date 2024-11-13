@@ -12,13 +12,19 @@ class Proveedores extends StatefulWidget {
 }
 
 class _ProveedoresState extends State<Proveedores> {
-  // Controladores para el formulario
   final TextEditingController _nombreController = TextEditingController();
   final TextEditingController _razonController = TextEditingController();
   final TextEditingController _contacto1Controller = TextEditingController();
   final TextEditingController _contacto2Controller = TextEditingController();
 
-  bool mostrarFormulario = false; // Control para mostrar/ocultar el formulario
+  bool mostrarFormulario = false;
+  Map<String, dynamic>? proveedorSeleccionado;
+
+  @override
+  void initState() {
+    super.initState();
+    context.read<ProveedoresBloc>().add(ObtenerProveedores()); // Cargar proveedores al iniciar
+  }
 
   void _agregarProveedor() async {
     if (_nombreController.text.isEmpty || _contacto1Controller.text.isEmpty) {
@@ -35,22 +41,51 @@ class _ProveedoresState extends State<Proveedores> {
       'contactoProveedor2': _contacto2Controller.text,
     };
 
-    // Insertar proveedor en la base de datos
-    await BdModel.agregarProveedor(nuevoProveedor);
+if (proveedorSeleccionado == null) {
+  // Crear nuevo proveedor
+  await BdModel.agregarProveedor(nuevoProveedor);
+} else {
+  // Obtener el idProveedor y convertirlo a int
+  int idProveedorInt = proveedorSeleccionado!['idProveedor'] is String
+      ? int.tryParse(proveedorSeleccionado!['idProveedor']) ?? 0
+      : proveedorSeleccionado!['idProveedor'] as int;
 
-    // Limpiar los campos
+  // Actualizar proveedor existente
+  nuevoProveedor['idProveedor'] = idProveedorInt.toString(); // Aquí convertimos a String si es necesario.
+  await BdModel.actualizarProveedor(idProveedorInt, nuevoProveedor);
+}
+
+
+
+    _limpiarFormulario();
+    context.read<ProveedoresBloc>().add(ObtenerProveedores()); // Recargar proveedores
+  }
+
+  void _editarProveedor(Map<String, dynamic> proveedor) {
+    setState(() {
+      proveedorSeleccionado = proveedor;
+      _nombreController.text = proveedor['nombreProveedor'];
+      _razonController.text = proveedor['razonProveedor'] ?? '';
+      _contacto1Controller.text = proveedor['contactoProveedor1'] ?? '';
+      _contacto2Controller.text = proveedor['contactoProveedor2'] ?? '';
+      mostrarFormulario = true;
+    });
+  }
+
+  void _eliminarProveedor(int idProveedor) async {
+    await BdModel.eliminarProveedor(idProveedor);
+    context.read<ProveedoresBloc>().add(ObtenerProveedores()); // Recargar proveedores
+  }
+
+  void _limpiarFormulario() {
     _nombreController.clear();
     _razonController.clear();
     _contacto1Controller.clear();
     _contacto2Controller.clear();
-
-    // Ocultar formulario
     setState(() {
       mostrarFormulario = false;
+      proveedorSeleccionado = null; // Resetear proveedor seleccionado
     });
-
-    // Recargar la lista de proveedores
-    context.read<ProveedoresBloc>().add(ObtenerProveedores());
   }
 
   @override
@@ -66,6 +101,7 @@ class _ProveedoresState extends State<Proveedores> {
                 onPressed: () {
                   setState(() {
                     mostrarFormulario = !mostrarFormulario;
+                    proveedorSeleccionado = null;
                   });
                 },
                 child: Text(mostrarFormulario ? 'Cancelar' : 'Agregar Proveedor'),
@@ -91,7 +127,7 @@ class _ProveedoresState extends State<Proveedores> {
                     TextField(
                       controller: _razonController,
                       decoration: const InputDecoration(
-                        labelText: 'Razón Social',
+                        labelText: 'Razón',
                         border: OutlineInputBorder(),
                       ),
                     ),
@@ -114,7 +150,7 @@ class _ProveedoresState extends State<Proveedores> {
                     const SizedBox(height: 20),
                     ElevatedButton(
                       onPressed: _agregarProveedor,
-                      child: const Text('Guardar Proveedor'),
+                      child: Text(proveedorSeleccionado == null ? 'Guardar Proveedor' : 'Actualizar Proveedor'),
                     ),
                   ],
                 ),
@@ -168,6 +204,10 @@ class _ProveedoresState extends State<Proveedores> {
                 padding: EdgeInsets.all(8.0),
                 child: Text('Contacto 2', style: TextStyle(fontWeight: FontWeight.bold)),
               ),
+              Padding(
+                padding: EdgeInsets.all(8.0),
+                child: Text('Acciones', style: TextStyle(fontWeight: FontWeight.bold)),
+              ),
             ],
           ),
           for (var proveedor in proveedores)
@@ -192,6 +232,21 @@ class _ProveedoresState extends State<Proveedores> {
                 Padding(
                   padding: const EdgeInsets.all(8.0),
                   child: Text(proveedor['contactoProveedor2'] ?? 'N/A'),
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Row(
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.edit),
+                        onPressed: () => _editarProveedor(proveedor),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.delete),
+                        onPressed: () => _eliminarProveedor(proveedor['idProveedor']),
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),

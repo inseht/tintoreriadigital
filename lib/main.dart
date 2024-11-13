@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:bitsdojo_window/bitsdojo_window.dart';
 import 'package:provider/provider.dart';
+import 'package:tintoreriadigital/repositorios/proveedoresRepositorio.dart';
 import 'themes/appTheme.dart';
 import 'themes/themeProvider.dart';
 import 'vistas/vistaPrincipal.dart';
 import 'vistas/proveedores.dart';
 import 'vistas/agregarProveedor.dart';
+import 'bloc/proveedoresBloc.dart';
 
 void main() {
   runApp(const MainApp());
@@ -23,8 +25,21 @@ class MainApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (context) => ThemeProvider(),
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider<ThemeProvider>(
+          create: (_) => ThemeProvider(),
+        ),
+        Provider<ProveedoresRepositorio>(
+          create: (_) => ProveedoresRepositorio(),
+        ),
+        Provider<ProveedoresBloc>(
+          create: (context) => ProveedoresBloc(
+            context.read<ProveedoresRepositorio>(),
+          ),
+          dispose: (context, bloc) => bloc.close(),
+        ),
+      ],
       child: Consumer<ThemeProvider>(
         builder: (context, themeProvider, child) {
           return MaterialApp(
