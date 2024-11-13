@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-
 import 'package:appflowy_board/appflowy_board.dart';
 
 class prioridadesBoard extends StatefulWidget {
@@ -28,7 +27,7 @@ class _MultiBoardListExampleState extends State<prioridadesBoard> {
   void initState() {
     super.initState();
     boardController = AppFlowyBoardScrollController();
-    final group1 = AppFlowyGroupData(id: "To Do", name: "To Do", items: [
+    final group1 = AppFlowyGroupData(id: "Prioridades", name: "Prioridades", items: [
       TextItem("Card 1"),
       TextItem("Card 2"),
       RichTextItem(title: "Card 3", subtitle: 'Aug 1, 2020 4:05 PM'),
@@ -37,8 +36,8 @@ class _MultiBoardListExampleState extends State<prioridadesBoard> {
     ]);
 
     final group2 = AppFlowyGroupData(
-      id: "In Progress",
-      name: "In Progress",
+      id: "Pendientes",
+      name: "Pendientes",
       items: <AppFlowyGroupItem>[
         TextItem("Card 6"),
         RichTextItem(title: "Card 7", subtitle: 'Aug 1, 2020 4:05 PM'),
@@ -46,96 +45,87 @@ class _MultiBoardListExampleState extends State<prioridadesBoard> {
       ],
     );
 
-    final group3 = AppFlowyGroupData(
-        id: "Pending",
-        name: "Pending",
-        items: <AppFlowyGroupItem>[
-          TextItem("Card 9"),
-          RichTextItem(title: "Card 10", subtitle: 'Aug 1, 2020 4:05 PM'),
-          TextItem("Card 11"),
-          TextItem("Card 12"),
-        ]);
-    final group4 = AppFlowyGroupData(
-        id: "Canceled",
-        name: "Canceled",
-        items: <AppFlowyGroupItem>[
-          TextItem("Card 13"),
-          TextItem("Card 14"),
-          TextItem("Card 15"),
-        ]);
-    final group5 = AppFlowyGroupData(
-        id: "Urgent",
-        name: "Urgent",
-        items: <AppFlowyGroupItem>[
-          TextItem("Card 14"),
-          TextItem("Card 15"),
-        ]);
-
     controller.addGroup(group1);
     controller.addGroup(group2);
-    controller.addGroup(group3);
-    controller.addGroup(group4);
-    controller.addGroup(group5);
   }
 
   @override
   Widget build(BuildContext context) {
     final config = AppFlowyBoardConfig(
-      groupBackgroundColor: HexColor.fromHex('#F7F8FC'),
+      groupBackgroundColor: Theme.of(context).scaffoldBackgroundColor,
       stretchGroupHeight: false,
     );
+
     return AppFlowyBoard(
-        controller: controller,
-        cardBuilder: (context, group, groupItem) {
-          return AppFlowyGroupCard(
-            key: ValueKey(groupItem.id),
-            child: _buildCard(groupItem),
-          );
-        },
-        boardScrollController: boardController,
-        footerBuilder: (context, columnData) {
-          return AppFlowyGroupFooter(
-            icon: const Icon(Icons.add, size: 20),
-            title: const Text('New'),
-            height: 50,
-            margin: config.groupBodyPadding,
-            onAddButtonClick: () {
-              boardController.scrollToBottom(columnData.id);
-            },
-          );
-        },
-        headerBuilder: (context, columnData) {
-          return AppFlowyGroupHeader(
-            icon: const Icon(Icons.lightbulb_circle),
-            title: SizedBox(
-              width: 60,
-              child: TextField(
-                controller: TextEditingController()
-                  ..text = columnData.headerData.groupName,
-                onSubmitted: (val) {
-                  controller
-                      .getGroupController(columnData.headerData.groupId)!
-                      .updateGroupName(val);
-                },
+      controller: controller,
+      cardBuilder: (context, group, groupItem) {
+        return AppFlowyGroupCard(
+          key: ValueKey(groupItem.id),
+          child: _buildCard(groupItem),
+        );
+      },
+      boardScrollController: boardController,
+      footerBuilder: (context, columnData) {
+        return AppFlowyGroupFooter(
+          icon: const Icon(Icons.add, size: 20),
+          title: const Text('New'),
+          height: 50,
+          margin: config.groupBodyPadding,
+          onAddButtonClick: () {
+            boardController.scrollToBottom(columnData.id);
+          },
+        );
+      },
+      headerBuilder: (context, columnData) {
+        return AppFlowyGroupHeader(
+          icon: const Icon(Icons.lightbulb_circle),
+          title: SizedBox(
+            width: 200, 
+            child: Text(
+              columnData.headerData.groupName,
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: Theme.of(context).textTheme.bodyLarge?.color ?? Colors.black,
               ),
             ),
-            addIcon: const Icon(Icons.add, size: 20),
-            moreIcon: const Icon(Icons.more_horiz, size: 20),
-            height: 50,
-            margin: config.groupBodyPadding,
-          );
-        },
-        groupConstraints: const BoxConstraints.tightFor(width: 240),
-        config: config);
+          ),
+          height: 50,
+          margin: config.groupBodyPadding,
+        );
+      },
+      groupConstraints: const BoxConstraints.tightFor(width: 400),
+      config: config,
+    );
   }
 
   Widget _buildCard(AppFlowyGroupItem item) {
+
+    final cardBackgroundColor = Theme.of(context).cardColor;
+    final textColor = Theme.of(context).textTheme.bodyLarge?.color ?? Colors.black;
+
     if (item is TextItem) {
       return Align(
         alignment: Alignment.centerLeft,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 30),
-          child: Text(item.s),
+        child: Container(
+          decoration: BoxDecoration(
+            color: cardBackgroundColor, 
+            borderRadius: BorderRadius.circular(8),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.1),
+                blurRadius: 4,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 30),
+            child: Text(
+              item.s,
+              style: TextStyle(color: textColor), 
+            ),
+          ),
         ),
       );
     }
@@ -148,38 +138,58 @@ class _MultiBoardListExampleState extends State<prioridadesBoard> {
   }
 }
 
-class RichTextCard extends StatefulWidget {
+class RichTextCard extends StatelessWidget {
   final RichTextItem item;
+
   const RichTextCard({
     required this.item,
     Key? key,
   }) : super(key: key);
 
   @override
-  State<RichTextCard> createState() => _RichTextCardState();
-}
-
-class _RichTextCardState extends State<RichTextCard> {
-  @override
   Widget build(BuildContext context) {
+    // Colores dinámicos según el tema claro u oscuro
+    final Color cardBackgroundColor = Theme.of(context).cardColor;
+    final Color titleColor = Theme.of(context).textTheme.bodyLarge?.color ?? Colors.black;
+    final Color subtitleColor = Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.7) ?? Colors.grey;
+
     return Align(
       alignment: Alignment.centerLeft,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              widget.item.title,
-              style: const TextStyle(fontSize: 14),
-              textAlign: TextAlign.left,
+      child: Container(
+        decoration: BoxDecoration(
+          color: cardBackgroundColor,
+          borderRadius: BorderRadius.circular(8),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 4,
+              offset: const Offset(0, 2),
             ),
-            const SizedBox(height: 10),
-            Text(
-              widget.item.subtitle,
-              style: const TextStyle(fontSize: 12, color: Colors.grey),
-            )
           ],
+        ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                item.title,
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: titleColor,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                item.subtitle,
+                style: TextStyle(
+                  fontSize: 14,
+                  color: subtitleColor,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -203,13 +213,4 @@ class RichTextItem extends AppFlowyGroupItem {
 
   @override
   String get id => title;
-}
-
-extension HexColor on Color {
-  static Color fromHex(String hexString) {
-    final buffer = StringBuffer();
-    if (hexString.length == 6 || hexString.length == 7) buffer.write('ff');
-    buffer.write(hexString.replaceFirst('#', ''));
-    return Color(int.parse(buffer.toString(), radix: 16));
-  }
 }

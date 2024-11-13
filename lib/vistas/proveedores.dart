@@ -2,9 +2,56 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../bloc/proveedoresBloc.dart';
 import '../repositorios/proveedoresRepositorio.dart';
+import '../bd/bdmodel.dart';
 
-class Proveedores extends StatelessWidget {
+class Proveedores extends StatefulWidget {
   const Proveedores({super.key});
+
+  @override
+  State<Proveedores> createState() => _ProveedoresState();
+}
+
+class _ProveedoresState extends State<Proveedores> {
+  // Controladores para el formulario
+  final TextEditingController _nombreController = TextEditingController();
+  final TextEditingController _razonController = TextEditingController();
+  final TextEditingController _contacto1Controller = TextEditingController();
+  final TextEditingController _contacto2Controller = TextEditingController();
+
+  bool mostrarFormulario = false; // Control para mostrar/ocultar el formulario
+
+  void _agregarProveedor() async {
+    if (_nombreController.text.isEmpty || _contacto1Controller.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Nombre y Contacto 1 son obligatorios')),
+      );
+      return;
+    }
+
+    final nuevoProveedor = {
+      'nombreProveedor': _nombreController.text,
+      'razonProveedor': _razonController.text,
+      'contactoProveedor1': _contacto1Controller.text,
+      'contactoProveedor2': _contacto2Controller.text,
+    };
+
+    // Insertar proveedor en la base de datos
+    await BdModel.agregarProveedor(nuevoProveedor);
+
+    // Limpiar los campos
+    _nombreController.clear();
+    _razonController.clear();
+    _contacto1Controller.clear();
+    _contacto2Controller.clear();
+
+    // Ocultar formulario
+    setState(() {
+      mostrarFormulario = false;
+    });
+
+    // Recargar la lista de proveedores
+    context.read<ProveedoresBloc>().add(ObtenerProveedores());
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -17,15 +64,61 @@ class Proveedores extends StatelessWidget {
               padding: const EdgeInsets.all(10.0),
               child: ElevatedButton(
                 onPressed: () {
-                  Navigator.of(context).pushNamed('/agregarProveedor');
+                  setState(() {
+                    mostrarFormulario = !mostrarFormulario;
+                  });
                 },
-                child: const Text('Agregar Proveedor'),
+                child: Text(mostrarFormulario ? 'Cancelar' : 'Agregar Proveedor'),
                 style: ElevatedButton.styleFrom(
                   shape: const StadiumBorder(),
                   padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 15.0),
                 ),
               ),
             ),
+            if (mostrarFormulario)
+              Padding(
+                padding: const EdgeInsets.all(10.0),
+                child: Column(
+                  children: [
+                    TextField(
+                      controller: _nombreController,
+                      decoration: const InputDecoration(
+                        labelText: 'Nombre del Proveedor',
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    TextField(
+                      controller: _razonController,
+                      decoration: const InputDecoration(
+                        labelText: 'Razón Social',
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    TextField(
+                      controller: _contacto1Controller,
+                      decoration: const InputDecoration(
+                        labelText: 'Contacto 1',
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    TextField(
+                      controller: _contacto2Controller,
+                      decoration: const InputDecoration(
+                        labelText: 'Contacto 2',
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    ElevatedButton(
+                      onPressed: _agregarProveedor,
+                      child: const Text('Guardar Proveedor'),
+                    ),
+                  ],
+                ),
+              ),
             Expanded(
               child: BlocBuilder<ProveedoresBloc, ProveedoresState>(
                 builder: (context, state) {
@@ -69,7 +162,7 @@ class Proveedores extends StatelessWidget {
               ),
               Padding(
                 padding: EdgeInsets.all(8.0),
-                child: Text('Contacto 2', style: TextStyle(fontWeight: FontWeight.bold)),
+                child: Text('Contacto 1', style: TextStyle(fontWeight: FontWeight.bold)),
               ),
               Padding(
                 padding: EdgeInsets.all(8.0),

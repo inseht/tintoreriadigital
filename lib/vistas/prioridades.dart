@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:sqflite_common_ffi/sqflite_ffi.dart';
-import 'package:appflowy_board/appflowy_board.dart';
-import 'prioridadesScroll.dart';
+import 'prioridadesCalendario.dart';
 import 'prioridadesBoard.dart';
 
 class Prioridades extends StatefulWidget {
@@ -16,7 +14,7 @@ class _PrioridadesState extends State<Prioridades> {
 
   final List<Widget> _widgetOptions = [
     const prioridadesBoard(),
-    const prioridadesScroll(),
+    const prioridadesCalendario(),
   ];
 
   void _onItemTapped(int index) {
@@ -32,12 +30,12 @@ class _PrioridadesState extends State<Prioridades> {
       bottomNavigationBar: BottomNavigationBar(
         items: const [
           BottomNavigationBarItem(
-            icon: Icon(Icons.table_chart),
-            label: 'Board',
+            icon: Icon(Icons.calendar_today_outlined),
+            label: 'Tablero',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.list_alt_outlined),
-            label: 'Pagination (infinite scroll)',
+            icon: Icon(Icons.calendar_month_outlined),
+            label: 'Calendario',
           ),
         ],
         currentIndex: _selectedIndex,

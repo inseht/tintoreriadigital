@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:tintoreriadigital/bd/bdmodel.dart';
+
 class Buscar extends StatefulWidget {
   const Buscar({super.key});
 
@@ -8,7 +9,6 @@ class Buscar extends StatefulWidget {
 }
 
 class _BuscarState extends State<Buscar> {
-  bool isDark = false;
   final SearchController _controller = SearchController();
   Map<String, List<Map<String, dynamic>>> datos = {};
   Map<String, List<Map<String, dynamic>>> resultadosFiltrados = {};
@@ -32,7 +32,7 @@ class _BuscarState extends State<Buscar> {
     final resultados = await BdModel.obtenerDatosDeTodasLasTablas();
     setState(() {
       datos = resultados;
-      resultadosFiltrados = resultados; // Inicialmente, todos los datos se muestran
+      resultadosFiltrados = {}; // No mostrar nada inicialmente
     });
   }
 
@@ -41,9 +41,9 @@ class _BuscarState extends State<Buscar> {
     String texto = _controller.text.toLowerCase().trim();
 
     if (texto.isEmpty) {
-      // Si la barra de búsqueda está vacía, mostrar todos los datos
+      // Si la barra de búsqueda está vacía, no mostrar resultados
       setState(() {
-        resultadosFiltrados = datos;
+        resultadosFiltrados = {}; // No mostrar nada hasta que haya texto
       });
       return;
     }
@@ -71,21 +71,6 @@ class _BuscarState extends State<Buscar> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Buscar Información'),
-        actions: [
-          IconButton(
-            isSelected: isDark,
-            icon: const Icon(Icons.wb_sunny_outlined),
-            selectedIcon: const Icon(Icons.brightness_2_outlined),
-            onPressed: () {
-              setState(() {
-                isDark = !isDark;
-              });
-            },
-          ),
-        ],
-      ),
       body: Padding(
         padding: const EdgeInsets.all(10.0),
         child: Column(
@@ -93,28 +78,41 @@ class _BuscarState extends State<Buscar> {
             // Barra de búsqueda
             SearchBar(
               controller: _controller,
-              padding: const WidgetStatePropertyAll<EdgeInsets>(
-                EdgeInsets.symmetric(horizontal: 16.0),
-              ),
+              padding: const WidgetStatePropertyAll<EdgeInsets>(EdgeInsets.symmetric(horizontal: 16.0)),
               leading: const Icon(Icons.search),
             ),
             const SizedBox(height: 20),
-            // Mostrar resultados
+            // Mostrar resultados solo si hay texto en la barra de búsqueda
             Expanded(
-              child: resultadosFiltrados.isEmpty
-                  ? const Center(child: Text('No hay coincidencias'))
-                  : ListView(
-                      children: resultadosFiltrados.entries.map((entry) {
-                        return ExpansionTile(
-                          title: Text(entry.key),
-                          children: entry.value.map((item) {
-                            return ListTile(
-                              title: Text(item.toString()),
+              child: _controller.text.isEmpty
+                  ? const Center(child: Text(''))
+                  : resultadosFiltrados.isEmpty
+                      ? const Center(child: Text('No hay resultados'))
+                      : ListView(
+                          children: resultadosFiltrados.entries.map((entry) {
+                            return Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  entry.key,
+                                  style: TextStyle(
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.bold,
+                                    color: Theme.of(context).primaryColor,
+                                  ),
+                                ),
+                                const SizedBox(height: 10),
+                                // Mostrar cada item en la lista sin necesidad de expansión
+                                ...entry.value.map((item) {
+                                  return ListTile(
+                                    title: Text(item.toString()),
+                                  );
+                                }).toList(),
+                                const SizedBox(height: 20),
+                              ],
                             );
                           }).toList(),
-                        );
-                      }).toList(),
-                    ),
+                        ),
             ),
           ],
         ),
