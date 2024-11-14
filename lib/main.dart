@@ -6,7 +6,6 @@ import 'themes/appTheme.dart';
 import 'themes/themeProvider.dart';
 import 'vistas/vistaPrincipal.dart';
 import 'vistas/proveedores.dart';
-import 'vistas/agregarProveedor.dart';
 import 'bloc/proveedoresBloc.dart';
 
 void main() {
@@ -48,8 +47,7 @@ class MainApp extends StatelessWidget {
             themeMode: themeProvider.isDark ? ThemeMode.dark : ThemeMode.light,
             home: const MainView(),
             routes: {
-              '/proveedores': (context) => const Proveedores(),
-              '/agregarProveedor': (context) => const agregarProveedor(),
+              '/proveedores': (context) => const Proveedores(),             
             },
           );
         },

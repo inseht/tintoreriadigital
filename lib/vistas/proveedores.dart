@@ -23,7 +23,7 @@ class _ProveedoresState extends State<Proveedores> {
   @override
   void initState() {
     super.initState();
-    context.read<ProveedoresBloc>().add(ObtenerProveedores()); // Cargar proveedores al iniciar
+    context.read<ProveedoresBloc>().add(ObtenerProveedores());
   }
 
   void _agregarProveedor() async {
@@ -41,24 +41,19 @@ class _ProveedoresState extends State<Proveedores> {
       'contactoProveedor2': _contacto2Controller.text,
     };
 
-if (proveedorSeleccionado == null) {
-  // Crear nuevo proveedor
-  await BdModel.agregarProveedor(nuevoProveedor);
-} else {
-  // Obtener el idProveedor y convertirlo a int
-  int idProveedorInt = proveedorSeleccionado!['idProveedor'] is String
-      ? int.tryParse(proveedorSeleccionado!['idProveedor']) ?? 0
-      : proveedorSeleccionado!['idProveedor'] as int;
+    if (proveedorSeleccionado == null) {
+      await BdModel.agregarProveedor(nuevoProveedor);
+    } else {
+      int idProveedorInt = proveedorSeleccionado!['idProveedor'] is String
+          ? int.tryParse(proveedorSeleccionado!['idProveedor']) ?? 0
+          : proveedorSeleccionado!['idProveedor'] as int;
 
-  // Actualizar proveedor existente
-  nuevoProveedor['idProveedor'] = idProveedorInt.toString(); // Aquí convertimos a String si es necesario.
-  await BdModel.actualizarProveedor(idProveedorInt, nuevoProveedor);
-}
-
-
+      nuevoProveedor['idProveedor'] = idProveedorInt.toString();
+      await BdModel.actualizarProveedor(idProveedorInt, nuevoProveedor);
+    }
 
     _limpiarFormulario();
-    context.read<ProveedoresBloc>().add(ObtenerProveedores()); // Recargar proveedores
+    context.read<ProveedoresBloc>().add(ObtenerProveedores());
   }
 
   void _editarProveedor(Map<String, dynamic> proveedor) {
@@ -74,7 +69,7 @@ if (proveedorSeleccionado == null) {
 
   void _eliminarProveedor(int idProveedor) async {
     await BdModel.eliminarProveedor(idProveedor);
-    context.read<ProveedoresBloc>().add(ObtenerProveedores()); // Recargar proveedores
+    context.read<ProveedoresBloc>().add(ObtenerProveedores());
   }
 
   void _limpiarFormulario() {
@@ -84,7 +79,7 @@ if (proveedorSeleccionado == null) {
     _contacto2Controller.clear();
     setState(() {
       mostrarFormulario = false;
-      proveedorSeleccionado = null; // Resetear proveedor seleccionado
+      proveedorSeleccionado = null;
     });
   }
 

@@ -27,33 +27,28 @@ class _BuscarState extends State<Buscar> {
     super.dispose();
   }
 
-  // Método para cargar los datos de todas las tablas
   Future<void> _cargarDatos() async {
     final resultados = await BdModel.obtenerDatosDeTodasLasTablas();
     setState(() {
       datos = resultados;
-      resultadosFiltrados = {}; // No mostrar nada inicialmente
+      resultadosFiltrados = {};
     });
   }
 
-  // Método para buscar coincidencias en todas las tablas
   void _buscarTexto() {
     String texto = _controller.text.toLowerCase().trim();
 
     if (texto.isEmpty) {
-      // Si la barra de búsqueda está vacía, no mostrar resultados
       setState(() {
-        resultadosFiltrados = {}; // No mostrar nada hasta que haya texto
+        resultadosFiltrados = {};
       });
       return;
     }
 
-    // Filtrar resultados
     Map<String, List<Map<String, dynamic>>> nuevosResultados = {};
 
     datos.forEach((tabla, registros) {
       List<Map<String, dynamic>> coincidencias = registros.where((registro) {
-        // Buscar coincidencias en los valores de cada registro
         return registro.values.any((valor) =>
             valor.toString().toLowerCase().contains(texto));
       }).toList();
@@ -68,6 +63,35 @@ class _BuscarState extends State<Buscar> {
     });
   }
 
+  Widget _buildItem(Map<String, dynamic> item) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: item.entries.map((entry) {
+        return Padding(
+          padding: const EdgeInsets.symmetric(vertical: 4.0),
+          child: Row(
+            children: [
+              Text(
+                "${entry.key}: ",
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
+                ),
+              ),
+              Expanded(
+                child: Text(
+                  entry.value.toString(),
+                  style: TextStyle(color: Colors.black54),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
+        );
+      }).toList(),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -75,14 +99,12 @@ class _BuscarState extends State<Buscar> {
         padding: const EdgeInsets.all(10.0),
         child: Column(
           children: [
-            // Barra de búsqueda
             SearchBar(
               controller: _controller,
               padding: const WidgetStatePropertyAll<EdgeInsets>(EdgeInsets.symmetric(horizontal: 16.0)),
               leading: const Icon(Icons.search),
             ),
             const SizedBox(height: 20),
-            // Mostrar resultados solo si hay texto en la barra de búsqueda
             Expanded(
               child: _controller.text.isEmpty
                   ? const Center(child: Text(''))
@@ -102,10 +124,14 @@ class _BuscarState extends State<Buscar> {
                                   ),
                                 ),
                                 const SizedBox(height: 10),
-                                // Mostrar cada item en la lista sin necesidad de expansión
                                 ...entry.value.map((item) {
-                                  return ListTile(
-                                    title: Text(item.toString()),
+                                  return Card(
+                                    margin: const EdgeInsets.symmetric(vertical: 8.0),
+                                    elevation: 5,
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(10.0),
+                                      child: _buildItem(item),
+                                    ),
                                   );
                                 }).toList(),
                                 const SizedBox(height: 20),

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
 class AppTheme {
-  // Modo claro
   static final ThemeData lightTheme = ThemeData(
     colorScheme: ColorScheme.fromSeed(
       seedColor: Color.fromRGBO(167, 215, 231, 1),
@@ -33,7 +32,6 @@ class AppTheme {
     ),
   );
 
-  // Modo oscuro
   static final ThemeData darkTheme = ThemeData(
     colorScheme: ColorScheme.fromSeed(
       seedColor: Color.fromRGBO(67, 97, 119, 1),
