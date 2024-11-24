@@ -8,4 +8,10 @@ class CrearNotasRepositorio {
   List<String> obtenerEstadosPago() {
     return ['Pendiente', 'Pagado', 'Abonado'];
   }
+
+    List<String> obtenerServicios() {
+    return ['Tintorería', 'Sastrería', 'Ambos', 'Otro'];
+  }
 }
+
+

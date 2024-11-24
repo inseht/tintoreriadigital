@@ -1,5 +1,6 @@
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:path/path.dart';
+import 'package:intl/intl.dart';
 
 class BdModel {
   static Future<Database> inicializarBD() async {
@@ -88,25 +89,34 @@ class BdModel {
     return db;
   }
 
-  static Future<void> crearNotaConPrendas(Map<String, dynamic> nota, List<Map<String, dynamic>> prendas) async {
-    final db = await inicializarBD();
+static Future<void> crearNotaConPrendas(Map<String, dynamic> nota, List<Map<String, dynamic>> prendas) async {
+  final db = await inicializarBD();
+  final dateFormat = DateFormat('dd/MM/yyyy');
 
-    try {
-      int idNota = await db.insert('Notas', nota);
+  try {
+    final notaConFechas = {
+      ...nota,
+      'fechaRecibido': dateFormat.format(nota['fechaRecibido']),
+      'fechaEstimada': dateFormat.format(nota['fechaEstimada']),
+    };
 
-      for (var prenda in prendas) {
-        int idPrenda = await db.insert('Prendas', prenda);
-        await db.insert('NotaPrenda', {
-          'idNota': idNota,
-          'idPrenda': idPrenda,
-        });
-      }
-    } catch (e) {
-      print('Error al crear la nota con prendas: $e');
-    } finally {
-      await db.close();
+    int idNota = await db.insert('Notas', notaConFechas);
+
+    for (var prenda in prendas) {
+      int idPrenda = await db.insert('Prendas', prenda);
+
+      await db.insert('NotaPrenda', {
+        'idNota': idNota,
+        'idPrenda': idPrenda,
+      });
     }
+  } catch (e) {
+    print('Error al crear la nota con prendas: $e');
+  } finally {
+    await db.close();
   }
+}
+
 
   static Future<List<Map<String, dynamic>>> obtenerNotasConPrendas() async {
     final db = await inicializarBD();
@@ -156,6 +166,14 @@ class BdModel {
   static Future<List<Map<String, dynamic>>> obtenerNotas() async {
     final db = await inicializarBD();
     final List<Map<String, dynamic>> notas = await db.query('Notas');
+  final dateFormat = DateFormat('dd/MM/yyyy');
+  final List<Map<String, dynamic>> notasConFechas = notas.map((nota) {
+    return {
+      ...nota,
+      'fechaRecibido': dateFormat.parse(nota['fechaRecibido'] as String),
+      'fechaEstimada': dateFormat.parse(nota['fechaEstimada'] as String),
+    };
+  }).toList();
     await db.close();
     return notas;
   }
@@ -225,4 +243,25 @@ class BdModel {
       await db.close();
     }
   }
+
+static Future<Map<DateTime, List<Map<String, dynamic>>>> fetchEventos() async {
+  final List<Map<String, dynamic>> notas = await obtenerNotas();
+
+  final Map<DateTime, List<Map<String, dynamic>>> eventos = {};
+
+  for (final nota in notas) {
+    final fechaRecibido = nota['fechaRecibido'] as DateTime;
+
+    if (eventos[fechaRecibido] == null) {
+      eventos[fechaRecibido] = [];
+    }
+    eventos[fechaRecibido]!.add(nota);
+  }
+
+  return eventos;
 }
+
+
+  
+}
+

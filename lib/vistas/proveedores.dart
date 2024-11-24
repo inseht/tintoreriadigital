@@ -106,8 +106,9 @@ class _ProveedoresState extends State<Proveedores> {
                 ),
               ),
             ),
-            if (mostrarFormulario)
-              Padding(
+            AnimatedCrossFade(
+              firstChild: Container(height: 0), // Espacio vacío sin redibujar bordes
+              secondChild: Padding(
                 padding: const EdgeInsets.all(10.0),
                 child: Column(
                   children: [
@@ -150,6 +151,12 @@ class _ProveedoresState extends State<Proveedores> {
                   ],
                 ),
               ),
+              crossFadeState: mostrarFormulario
+                  ? CrossFadeState.showSecond
+                  : CrossFadeState.showFirst,
+              duration: const Duration(milliseconds: 300),
+            ),
+
             Expanded(
               child: BlocBuilder<ProveedoresBloc, ProveedoresState>(
                 builder: (context, state) {

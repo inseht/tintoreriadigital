@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:tintoreriadigital/repositorios/crearNotasRepositorio.dart';
-import '../bloc/crearNotaBloc.dart';
-import 'package:roundcheckbox/roundcheckbox.dart';
 import 'package:syncfusion_flutter_datepicker/datepicker.dart';
+import 'package:intl/intl.dart';
+import '../repositorios/crearNotasRepositorio.dart';
+import 'package:roundcheckbox/roundcheckbox.dart';
 
 class CrearNota extends StatefulWidget {
   const CrearNota({super.key});
@@ -13,231 +12,305 @@ class CrearNota extends StatefulWidget {
 }
 
 class _CrearNotaState extends State<CrearNota> {
-  final _formKey = GlobalKey<FormState>();
-  final TextEditingController _nombreClienteController = TextEditingController();
-  final TextEditingController _telefonoClienteController = TextEditingController();
-  final TextEditingController _importeController = TextEditingController();
+  final TextEditingController _nombreController = TextEditingController();
+  final TextEditingController _telefonoController = TextEditingController();
   final TextEditingController _observacionesController = TextEditingController();
+  final TextEditingController _estadoPagoController = TextEditingController();
+  final TextEditingController _abonoController = TextEditingController();
+  final TextEditingController _importeTotalController = TextEditingController();
 
-  String _fechaRecibido = '';
-  String _fechaEstimada = '';
-  int _prioridad = 2;
-  String _estadoSeleccionado = 'Pendiente';
-  String _servicioSeleccionado = 'Tintorería';
-  List<Map<String, dynamic>> _prendas = [];
-  int _idNota = 0; // Para almacenar el id de la nota una vez guardada.
+  DateTime? _fechaInicio;
+  DateTime? _fechaFin;
+  String? _tipoPrendaSeleccionada;
+  final List<String> _tiposPrenda = ['Camisa', 'Pantalón', 'Chaqueta', 'Vestido'];
 
-  // Controladores para las prendas
-  final TextEditingController _tipoPrendaController = TextEditingController();
-  final TextEditingController _cantidadPrendaController = TextEditingController();
-  final TextEditingController _precioPrendaController = TextEditingController();
+  int _cantidadPrendas = 0;
 
-  void _seleccionarFechaRecibido() async {
+  // Servicios desde el repositorio
+  final List<String> _servicios = CrearNotasRepositorio().obtenerServicios();
+  String? _servicioSeleccionado;
+
+  /// Abre el DatePicker en un cuadro de diálogo
+  Future<void> _mostrarDatePicker(BuildContext context) async {
     await showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        contentPadding: EdgeInsets.zero,
+        title: const Text('Seleccionar rango de fechas'),
         content: SizedBox(
-          height: 300,
+          height: 400,
           width: 300,
           child: SfDateRangePicker(
-            selectionMode: DateRangePickerSelectionMode.single,
+            selectionMode: DateRangePickerSelectionMode.range,
             onSelectionChanged: (args) {
-              if (args.value is DateTime) {
-                final DateTime selectedDate = args.value;
+              if (args.value is PickerDateRange) {
                 setState(() {
-                  _fechaRecibido = selectedDate.toString().split(' ')[0];
-                  _fechaEstimada = selectedDate.add(Duration(days: 7)).toString().split(' ')[0];
+                  _fechaInicio = args.value.startDate;
+                  _fechaFin = args.value.endDate;
                 });
               }
             },
           ),
         ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+            child: const Text('Cerrar'),
+          ),
+        ],
       ),
     );
   }
 
-  void _togglePrioridad() {
-    setState(() {
-      _prioridad = _prioridad == 1 ? 2 : 1;
-    });
-  }
-
-  void _agregarPrenda() {
-    if (_tipoPrendaController.text.isEmpty ||
-        _cantidadPrendaController.text.isEmpty ||
-        _precioPrendaController.text.isEmpty) {
-      return;
-    }
-
-    setState(() {
-      _prendas.add({
-        'tipo': _tipoPrendaController.text,
-        'cantidad': int.parse(_cantidadPrendaController.text),
-        'precioUnitario': double.parse(_precioPrendaController.text),
-      });
-
-      // Limpiar los controladores para la siguiente prenda
-      _tipoPrendaController.clear();
-      _cantidadPrendaController.clear();
-      _precioPrendaController.clear();
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (_) => CrearNotaBloc(repositorio: CrearNotasRepositorio()),
-      child: Scaffold(
-        body: BlocListener<CrearNotaBloc, CrearNotaState>(
-          listener: (context, state) {
-            if (state is FormularioValido) {
-              context.read<CrearNotaBloc>().add(EnviarFormulario(
-                nota: {
-                  'nombreCliente': _nombreClienteController.text,
-                  'telefonoCliente': _telefonoClienteController.text,
-                  'fechaRecibido': _fechaRecibido,
-                  'fechaEstimada': _fechaEstimada,
-                  'importe': double.parse(_importeController.text),
-                  'estadoPago': _estadoSeleccionado,
-                  'prioridad': _prioridad,
-                  'observaciones': _observacionesController.text,
-                  'estado': _estadoSeleccionado,
-                },
-                prendas: _prendas,
-              ));
-            } else if (state is FormularioEnviado) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Formulario enviado con éxito')),
-              );
-            } else if (state is FormularioInvalido) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(state.mensaje)),
-              );
-            }
-          },
-          child: BlocBuilder<CrearNotaBloc, CrearNotaState>(
-            builder: (context, state) {
-              return Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Form(
-                  key: _formKey,
-                  child: Column(
-                    children: [
-                      TextFormField(
-                        controller: _nombreClienteController,
-                        decoration: const InputDecoration(labelText: 'Nombre del Cliente'),
-                        validator: (value) => value == null || value.isEmpty ? 'Campo requerido' : null,
-                      ),
-                      const SizedBox(height: 16),
-                      TextFormField(
-                        controller: _telefonoClienteController,
-                        decoration: const InputDecoration(labelText: 'Teléfono del Cliente'),
-                        keyboardType: TextInputType.phone,
-                        validator: (value) {
-                          if (value == null || value.isEmpty) return 'Campo requerido';
-                          final regex = RegExp(r'^\d{10,}$');
-                          return regex.hasMatch(value) ? null : 'Debe contener al menos 10 dígitos';
-                        },
-                      ),
-                      const SizedBox(height: 16),
-                      TextFormField(
-                        controller: _importeController,
-                        decoration: const InputDecoration(labelText: 'Importe'),
-                        keyboardType: TextInputType.number,
-                        validator: (value) {
-                          if (value == null || value.isEmpty) return 'Campo requerido';
-                          return double.tryParse(value) != null ? null : 'Debe ser un número';
-                        },
-                      ),
-                      const SizedBox(height: 16),
-                      ElevatedButton(
-                        onPressed: _seleccionarFechaRecibido,
-                        child: Text(
-                          _fechaRecibido.isEmpty ? 'Seleccionar Fecha Recibido' : 'Fecha Recibido: $_fechaRecibido',
+    return Scaffold(
+      body: Column(
+        children: [
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Row(
+                children: <Widget>[
+                  // Card de Información General
+                  Expanded(
+                    child: Card(
+                      child: Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'Información general',
+                              style: TextStyle(fontSize: 16.0),
+                            ),
+                            const SizedBox(height: 16.0),
+                            Column(
+                              children: [
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(vertical: 8.0),
+                                  child: TextField(
+                                    controller: _nombreController,
+                                    decoration: const InputDecoration(
+                                      border: OutlineInputBorder(),
+                                      labelText: 'Nombre del cliente',
+                                    ),
+                                  ),
+                                ),
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(vertical: 8.0),
+                                  child: TextField(
+                                    controller: _telefonoController,
+                                    keyboardType: TextInputType.phone,
+                                    decoration: const InputDecoration(
+                                      border: OutlineInputBorder(),
+                                      labelText: 'Teléfono del cliente',
+                                    ),
+                                  ),
+                                ),
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(vertical: 8.0),
+                                  child: Row(
+                                    children: [
+                                      ElevatedButton(
+                                        onPressed: () => _mostrarDatePicker(context),
+                                        child: const Text('Seleccionar rango de fechas'),
+                                      ),
+                                      const SizedBox(width: 10),
+                                      Text(
+                                        _fechaInicio != null && _fechaFin != null
+                                            ? '${DateFormat('dd/MM/yyyy').format(_fechaInicio!)} - ${DateFormat('dd/MM/yyyy').format(_fechaFin!)}'
+                                            : 'No seleccionado',
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(vertical: 8.0),
+                                  child: Text(
+                                    'Fecha estimada de entrega: ${_fechaFin != null ? DateFormat('dd/MM/yyyy').format(_fechaFin!) : 'Seleccione un rango'}',
+                                    style: const TextStyle(fontSize: 14.0),
+                                  ),
+                                ),
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(vertical: 8.0),
+                                  child: TextField(
+                                    controller: _observacionesController,
+                                    decoration: const InputDecoration(
+                                      border: OutlineInputBorder(),
+                                      labelText: 'Observaciones',
+                                    ),
+                                  ),
+                                ),
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(vertical: 8.0),
+                                  child: TextField(
+                                    controller: _estadoPagoController,
+                                    decoration: const InputDecoration(
+                                      border: OutlineInputBorder(),
+                                      labelText: 'Estado de pago',
+                                    ),
+                                  ),
+                                ),
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(vertical: 8.0),
+                                  child: TextField(
+                                    controller: _abonoController,
+                                    keyboardType: TextInputType.number,
+                                    decoration: const InputDecoration(
+                                      border: OutlineInputBorder(),
+                                      labelText: 'Abono',
+                                    ),
+                                  ),
+                                ),
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(vertical: 8.0),
+                                  child: TextField(
+                                    controller: _importeTotalController,
+                                    keyboardType: TextInputType.number,
+                                    decoration: const InputDecoration(
+                                      border: OutlineInputBorder(),
+                                      labelText: 'Importe total',
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 16.0),
+                            Center(
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Text('Selecciona la prioridad'),
+                                  const SizedBox(width: 8.0),
+                                  RoundCheckBox(
+                                    onTap: (selected) {},
+                                    uncheckedColor: Colors.red,
+                                    uncheckedWidget: const Icon(
+                                      Icons.close,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                      const SizedBox(height: 16),
-                      DropdownButtonFormField<String>(
-                        value: _estadoSeleccionado,
-                        decoration: const InputDecoration(labelText: 'Estado'),
-                        items: ['Pendiente', 'En Proceso', 'Finalizado']
-                            .map((estado) => DropdownMenuItem(value: estado, child: Text(estado)))
-                            .toList(),
-                        onChanged: (valor) => setState(() => _estadoSeleccionado = valor!),
-                      ),
-                      const SizedBox(height: 16),
-                      DropdownButtonFormField<String>(
-                        value: _servicioSeleccionado,
-                        decoration: const InputDecoration(labelText: 'Servicio'),
-                        items: ['Tintorería', 'Lavado', 'Planchado', 'Compostura']
-                            .map((servicio) => DropdownMenuItem(value: servicio, child: Text(servicio)))
-                            .toList(),
-                        onChanged: (valor) => setState(() => _servicioSeleccionado = valor!),
-                      ),
-                      const SizedBox(height: 16),
-
-                      TextFormField(
-                        controller: _tipoPrendaController,
-                        decoration: const InputDecoration(labelText: 'Tipo de Prenda'),
-                      ),
-                      TextFormField(
-                        controller: _cantidadPrendaController,
-                        decoration: const InputDecoration(labelText: 'Cantidad'),
-                        keyboardType: TextInputType.number,
-                      ),
-                      TextFormField(
-                        controller: _precioPrendaController,
-                        decoration: const InputDecoration(labelText: 'Precio Unitario'),
-                        keyboardType: TextInputType.number,
-                      ),
-                      ElevatedButton(
-                        onPressed: _agregarPrenda,
-                        child: const Text('Agregar Prenda'),
-                      ),
-                      const SizedBox(height: 16),
-                      // Mostrar las prendas agregadas
-                      _prendas.isNotEmpty
-                          ? ListView.builder(
-                              shrinkWrap: true,
-                              itemCount: _prendas.length,
-                              itemBuilder: (context, index) {
-                                final prenda = _prendas[index];
-                                return ListTile(
-                                  title: Text('Prenda: ${prenda['tipo']}'),
-                                  subtitle: Text('Cantidad: ${prenda['cantidad']} - Precio: ${prenda['precioUnitario']}'),
-                                );
-                              },
-                            )
-                          : const Text('No hay prendas añadidas'),
-                      const SizedBox(height: 16),
-                      ElevatedButton(
-                        onPressed: () {
-                          if (_formKey.currentState!.validate()) {
-                            context.read<CrearNotaBloc>().add(
-                              ValidarFormulario(
-                                nombreCliente: _nombreClienteController.text,
-                                telefonoCliente: _telefonoClienteController.text,
-                                fechaRecibido: _fechaRecibido,
-                                fechaEstimada: _fechaEstimada,
-                                importe: _importeController.text,
-                                estadoPago: _estadoSeleccionado,
-                                prioridad: _prioridad.toString(),
-                                observaciones: _observacionesController.text,
-                                estado: _estadoSeleccionado,
-                              ),
-                            );
-                          }
-                        },
-                        child: const Text('Enviar Nota'),
-                      ),
-                    ],
+                    ),
                   ),
-                ),
-              );
-            },
+                  const SizedBox(width: 16.0),
+                  // Card de Prendas
+                  Expanded(
+                    child: Card(
+                      child: Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'Prendas',
+                              style: TextStyle(fontSize: 16.0),
+                            ),
+                            const SizedBox(height: 16.0),
+                            Column(
+                              children: [
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(vertical: 8.0),
+                                  child: DropdownButtonFormField<String>(
+                                    value: _tipoPrendaSeleccionada,
+                                    items: _tiposPrenda
+                                        .map((tipo) => DropdownMenuItem(
+                                              value: tipo,
+                                              child: Text(tipo),
+                                            ))
+                                        .toList(),
+                                    onChanged: (value) {
+                                      setState(() {
+                                        _tipoPrendaSeleccionada = value;
+                                      });
+                                    },
+                                    decoration: const InputDecoration(
+                                      border: OutlineInputBorder(),
+                                      labelText: 'Tipo de prenda',
+                                    ),
+                                  ),
+                                ),
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(vertical: 8.0),
+                                  child: DropdownButtonFormField<String>(
+                                    value: _servicioSeleccionado,
+                                    items: _servicios
+                                        .map((servicio) => DropdownMenuItem(
+                                              value: servicio,
+                                              child: Text(servicio),
+                                            ))
+                                        .toList(),
+                                    onChanged: (value) {
+                                      setState(() {
+                                        _servicioSeleccionado = value;
+                                      });
+                                    },
+                                    decoration: const InputDecoration(
+                                      border: OutlineInputBorder(),
+                                      labelText: 'Servicios',
+                                    ),
+                                  ),
+                                ),
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(vertical: 8.0),
+                                  child: TextField(
+                                    keyboardType: TextInputType.number,
+                                    onChanged: (value) {
+                                      setState(() {
+                                        _cantidadPrendas = int.tryParse(value) ?? 0;
+                                      });
+                                    },
+                                    decoration: const InputDecoration(
+                                      border: OutlineInputBorder(),
+                                      labelText: 'Cantidad de prendas',
+                                    ),
+                                  ),
+                                ),
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(vertical: 8.0),
+                                  child: TextField(
+                                    keyboardType: TextInputType.number,
+                                    decoration: const InputDecoration(
+                                      border: OutlineInputBorder(),
+                                      labelText: 'Precio unitario',
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 16.0),
+                            Center(
+                              child: ElevatedButton(
+                                onPressed: () {},
+                                child: const Text('Agregar prenda'),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
-        ),
+          const SizedBox(height: 16.0),
+          // Botón al final de la pantalla
+          Center(
+            child: ElevatedButton(
+              onPressed: () {},
+              child: const Text('Crear nota'),
+            ),
+          ),
+          const SizedBox(height: 16.0),
+        ],
       ),
     );
   }
