@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:syncfusion_flutter_datepicker/datepicker.dart';
 import 'package:intl/intl.dart';
+import 'package:tintoreriadigital/bloc/crearNotaBloc.dart';
 import '../repositorios/crearNotasRepositorio.dart';
 import 'package:roundcheckbox/roundcheckbox.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 class CrearNota extends StatefulWidget {
   const CrearNota({super.key});
@@ -18,6 +20,7 @@ class _CrearNotaState extends State<CrearNota> {
   final TextEditingController _estadoPagoController = TextEditingController();
   final TextEditingController _abonoController = TextEditingController();
   final TextEditingController _importeTotalController = TextEditingController();
+  final TextEditingController _precioUnitarioController = TextEditingController(); // Controlador para el precio unitario
 
   DateTime? _fechaInicio;
   DateTime? _fechaFin;
@@ -30,8 +33,13 @@ class _CrearNotaState extends State<CrearNota> {
   final List<String> _servicios = CrearNotasRepositorio().obtenerServicios();
   String? _servicioSeleccionado;
 
+  // Lista de prendas agregadas
+  List<Map<String, dynamic>> _prendas = [];
+
   /// Abre el DatePicker en un cuadro de diálogo
   Future<void> _mostrarDatePicker(BuildContext context) async {
+    DateTime fechaMinima = DateTime.now().subtract(Duration(days: 60)); // 60 días es aproximadamente 2 meses.
+
     await showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -41,6 +49,7 @@ class _CrearNotaState extends State<CrearNota> {
           width: 300,
           child: SfDateRangePicker(
             selectionMode: DateRangePickerSelectionMode.range,
+            minDate: fechaMinima, // Establece la fecha mínima
             onSelectionChanged: (args) {
               if (args.value is PickerDateRange) {
                 setState(() {
@@ -61,6 +70,57 @@ class _CrearNotaState extends State<CrearNota> {
         ],
       ),
     );
+  }
+
+  // Método para agregar una prenda a la lista
+  void _agregarPrenda() {
+    double precioUnitario = double.tryParse(_precioUnitarioController.text) ?? 0.0; // Obtener precio unitario desde el controlador
+
+    if (_tipoPrendaSeleccionada != null && _cantidadPrendas > 0 && _servicioSeleccionado != null && precioUnitario > 0.0) {
+      setState(() {
+        _prendas.add({
+          'tipo': _tipoPrendaSeleccionada,
+          'servicio': _servicioSeleccionado,
+          'precioUnitario': precioUnitario,
+          'cantidad': _cantidadPrendas,
+        });
+      });
+
+      // Imprimir la lista de prendas en la consola para verificar
+      print('Lista de prendas:');
+      _prendas.forEach((prenda) {
+        print('Tipo: ${prenda['tipo']}, Servicio: ${prenda['servicio']}, Cantidad: ${prenda['cantidad']}, Precio Unitario: ${prenda['precioUnitario']}');
+      });
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Por favor, complete todos los campos de prenda')),
+      );
+    }
+  }
+
+  // Método para enviar los datos al BLoC
+  void _crearNota() {
+    if (_fechaInicio == null || _fechaFin == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Debe seleccionar un rango de fechas')),
+      );
+      return;
+    }
+
+    final Map<String, dynamic> nota = {
+      'nombreCliente': _nombreController.text,
+      'telefonoCliente': _telefonoController.text,
+      'fechaRecibido': _fechaInicio,
+      'fechaEstimada': _fechaFin,
+      'importe': double.tryParse(_importeTotalController.text) ?? 0.0,
+      'estadoPago': _estadoPagoController.text,
+      'prioridad': 1, // Puedes obtener esta información de alguna parte o input
+      'observaciones': _observacionesController.text,
+      'estado': 'Recibido', // Por defecto o según el caso
+    };
+
+    // Enviar al BLoC
+    context.read<CrearNotaBloc>().add(EnviarFormulario(nota: nota, prendas: _prendas));
   }
 
   @override
@@ -115,7 +175,7 @@ class _CrearNotaState extends State<CrearNota> {
                                     children: [
                                       ElevatedButton(
                                         onPressed: () => _mostrarDatePicker(context),
-                                        child: const Text('Seleccionar rango de fechas'),
+                                        child: const Text('Seleccionar fechas'),
                                       ),
                                       const SizedBox(width: 10),
                                       Text(
@@ -276,6 +336,7 @@ class _CrearNotaState extends State<CrearNota> {
                                 Padding(
                                   padding: const EdgeInsets.symmetric(vertical: 8.0),
                                   child: TextField(
+                                    controller: _precioUnitarioController, // Ahora se usa el controlador adecuado
                                     keyboardType: TextInputType.number,
                                     decoration: const InputDecoration(
                                       border: OutlineInputBorder(),
@@ -288,8 +349,11 @@ class _CrearNotaState extends State<CrearNota> {
                             const SizedBox(height: 16.0),
                             Center(
                               child: ElevatedButton(
-                                onPressed: () {},
+                                onPressed: _agregarPrenda,
                                 child: const Text('Agregar prenda'),
+                                style: ElevatedButton.styleFrom(
+                                  minimumSize: const Size(200, 50),
+                                ),
                               ),
                             ),
                           ],
@@ -301,15 +365,21 @@ class _CrearNotaState extends State<CrearNota> {
               ),
             ),
           ),
-          const SizedBox(height: 16.0),
-          // Botón al final de la pantalla
+          const SizedBox(height: 50.0),
           Center(
             child: ElevatedButton(
-              onPressed: () {},
-              child: const Text('Crear nota'),
+              onPressed: _crearNota,
+              child: const Text(
+                'Crear nota',
+                style: TextStyle(fontSize: 30), // Aumenta el tamaño del texto
+              ),
+              style: ElevatedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 40), // Ajusta el relleno interno
+                minimumSize: const Size(200, 70), // Asegura un tamaño mínimo adecuado
+              ),
             ),
           ),
-          const SizedBox(height: 16.0),
+          const SizedBox(height: 100.0),
         ],
       ),
     );

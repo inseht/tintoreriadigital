@@ -156,12 +156,13 @@ static Future<void> crearNotaConPrendas(Map<String, dynamic> nota, List<Map<Stri
     }
   }
 
-  static Future<List<Map<String, dynamic>>> obtenerPrendas() async {
-    final db = await inicializarBD();
-    final List<Map<String, dynamic>> prendas = await db.query('Prendas');
-    await db.close();
-    return prendas;
-  }
+static Future<List<Map<String, dynamic>>> obtenerPrendas() async {
+  final db = await inicializarBD();
+  final List<Map<String, dynamic>> prendas = await db.query('Prendas');
+  await db.close();
+  return prendas;
+}
+
 
   static Future<List<Map<String, dynamic>>> obtenerNotas() async {
     final db = await inicializarBD();
@@ -261,7 +262,22 @@ static Future<Map<DateTime, List<Map<String, dynamic>>>> fetchEventos() async {
   return eventos;
 }
 
+ static Future<void> agregarPrenda(Map<String, dynamic> prenda) async {
+    final db = await inicializarBD();
+    try {
+      await db.insert('Prendas', prenda);
+      print('Prenda agregada con éxito');
+    } catch (e) {
+      print('Error al agregar prenda: $e');
+    } finally {
+      await db.close();
+    }
+  }
 
-  
+
+
 }
+
+
+
 

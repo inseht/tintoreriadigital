@@ -99,7 +99,7 @@ class _ProveedoresState extends State<Proveedores> {
                     proveedorSeleccionado = null;
                   });
                 },
-                child: Text(mostrarFormulario ? 'Cancelar' : 'Agregar Proveedor'),
+                child: Text(mostrarFormulario ? 'Cancelar' : 'Agregar Proveedor', style: TextStyle(fontSize: 30)),
                 style: ElevatedButton.styleFrom(
                   shape: const StadiumBorder(),
                   padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 15.0),
@@ -146,7 +146,7 @@ class _ProveedoresState extends State<Proveedores> {
                     const SizedBox(height: 20),
                     ElevatedButton(
                       onPressed: _agregarProveedor,
-                      child: Text(proveedorSeleccionado == null ? 'Guardar Proveedor' : 'Actualizar Proveedor'),
+                      child: Text(proveedorSeleccionado == null ? 'Guardar Proveedor' : 'Actualizar Proveedor', style: TextStyle(fontSize: 30)),
                     ),
                   ],
                 ),
