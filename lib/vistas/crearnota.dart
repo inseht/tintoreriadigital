@@ -371,11 +371,11 @@ class _CrearNotaState extends State<CrearNota> {
               onPressed: _crearNota,
               child: const Text(
                 'Crear nota',
-                style: TextStyle(fontSize: 30), // Aumenta el tamaño del texto
+                style: TextStyle(fontSize: 30), 
               ),
               style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 40), // Ajusta el relleno interno
-                minimumSize: const Size(200, 70), // Asegura un tamaño mínimo adecuado
+                padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 40), 
+                minimumSize: const Size(200, 70),
               ),
             ),
           ),

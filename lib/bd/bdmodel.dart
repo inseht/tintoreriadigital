@@ -262,7 +262,7 @@ static Future<Map<DateTime, List<Map<String, dynamic>>>> fetchEventos() async {
   return eventos;
 }
 
- static Future<void> agregarPrenda(Map<String, dynamic> prenda) async {
+static Future<void> agregarPrenda(Map<String, dynamic> prenda) async {
     final db = await inicializarBD();
     try {
       await db.insert('Prendas', prenda);
