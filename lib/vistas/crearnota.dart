@@ -20,12 +20,15 @@ class _CrearNotaState extends State<CrearNota> {
   final TextEditingController _estadoPagoController = TextEditingController();
   final TextEditingController _abonoController = TextEditingController();
   final TextEditingController _importeTotalController = TextEditingController();
-  final TextEditingController _precioUnitarioController = TextEditingController(); // Controlador para el precio unitario
+  final TextEditingController _precioUnitarioController = TextEditingController(); 
 
   DateTime? _fechaInicio;
   DateTime? _fechaFin;
   String? _tipoPrendaSeleccionada;
+String? _EstadoPagoNota;
   final List<String> _tiposPrenda = ['Camisa', 'Pantalón', 'Chaqueta', 'Vestido'];
+
+  final List<String> _EstadoPago = ['Pagado', 'Abono', 'No pagado'];
 
   int _cantidadPrendas = 0;
 
@@ -97,6 +100,8 @@ class _CrearNotaState extends State<CrearNota> {
       );
     }
   }
+
+  
 
   // Método para enviar los datos al BLoC
   void _crearNota() {
@@ -204,37 +209,53 @@ class _CrearNotaState extends State<CrearNota> {
                                   ),
                                 ),
                                 Padding(
-                                  padding: const EdgeInsets.symmetric(vertical: 8.0),
-                                  child: TextField(
-                                    controller: _estadoPagoController,
-                                    decoration: const InputDecoration(
-                                      border: OutlineInputBorder(),
-                                      labelText: 'Estado de pago',
-                                    ),
-                                  ),
-                                ),
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(vertical: 8.0),
-                                  child: TextField(
-                                    controller: _abonoController,
-                                    keyboardType: TextInputType.number,
-                                    decoration: const InputDecoration(
-                                      border: OutlineInputBorder(),
-                                      labelText: 'Abono',
-                                    ),
-                                  ),
-                                ),
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(vertical: 8.0),
-                                  child: TextField(
-                                    controller: _importeTotalController,
-                                    keyboardType: TextInputType.number,
-                                    decoration: const InputDecoration(
-                                      border: OutlineInputBorder(),
-                                      labelText: 'Importe total',
-                                    ),
-                                  ),
-                                ),
+  padding: const EdgeInsets.symmetric(vertical: 8.0),
+  child: DropdownButtonFormField<String>(
+    value: _EstadoPagoNota,
+    items: _EstadoPago
+        .map((estado) => DropdownMenuItem(
+              value: estado,
+              child: Text(estado),
+            ))
+        .toList(),
+    onChanged: (value) {
+      setState(() {
+        _EstadoPagoNota = value;
+      });
+    },
+    decoration: const InputDecoration(
+      border: OutlineInputBorder(),
+      labelText: 'Estado de pago',
+    ),
+  ),
+),
+
+Padding(
+  padding: const EdgeInsets.symmetric(vertical: 8.0),
+  child: TextField(
+    controller: _abonoController,
+    enabled: _EstadoPagoNota == 'Abono', // Habilitado solo si el estado es "Abono"
+    keyboardType: TextInputType.number,
+    decoration: const InputDecoration(
+      border: OutlineInputBorder(),
+      labelText: 'Abono',
+    ),
+  ),
+),
+
+Padding(
+  padding: const EdgeInsets.symmetric(vertical: 8.0),
+  child: TextField(
+    controller: _importeTotalController,
+    enabled: false, // Siempre inhabilitado
+    keyboardType: TextInputType.number,
+    decoration: const InputDecoration(
+      border: OutlineInputBorder(),
+      labelText: 'Importe total',
+    ),
+  ),
+),
+
                               ],
                             ),
                             const SizedBox(height: 16.0),
