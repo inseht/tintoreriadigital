@@ -75,31 +75,54 @@ String? _EstadoPagoNota;
     );
   }
 
-  // Método para agregar una prenda a la lista
-  void _agregarPrenda() {
-    double precioUnitario = double.tryParse(_precioUnitarioController.text) ?? 0.0; // Obtener precio unitario desde el controlador
-
-    if (_tipoPrendaSeleccionada != null && _cantidadPrendas > 0 && _servicioSeleccionado != null && precioUnitario > 0.0) {
-      setState(() {
-        _prendas.add({
-          'tipo': _tipoPrendaSeleccionada,
-          'servicio': _servicioSeleccionado,
-          'precioUnitario': precioUnitario,
-          'cantidad': _cantidadPrendas,
-        });
-      });
-
-      // Imprimir la lista de prendas en la consola para verificar
-      print('Lista de prendas:');
-      _prendas.forEach((prenda) {
-        print('Tipo: ${prenda['tipo']}, Servicio: ${prenda['servicio']}, Cantidad: ${prenda['cantidad']}, Precio Unitario: ${prenda['precioUnitario']}');
-      });
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Por favor, complete todos los campos de prenda')),
-      );
-    }
+void _agregarPrenda() {
+  // Validar que los campos de la nota estén llenos
+  if (_nombreController.text.trim().isEmpty ||
+      _telefonoController.text.trim().isEmpty ||
+      _fechaInicio == null ||
+      _fechaFin == null) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Por favor, complete todos los campos principales de la nota antes de agregar una prenda')),
+    );
+    return; // Salir del método si no se cumplen los requisitos
   }
+
+  // Validar que los campos de la prenda estén completos
+  double precioUnitario = double.tryParse(_precioUnitarioController.text) ?? 0.0;
+  if (_tipoPrendaSeleccionada != null && 
+      _cantidadPrendas > 0 && 
+      _servicioSeleccionado != null && 
+      precioUnitario > 0.0) {
+    setState(() {
+      double subtotal = precioUnitario * _cantidadPrendas;
+      _prendas.add({
+        'tipo': _tipoPrendaSeleccionada,
+        'servicio': _servicioSeleccionado,
+        'precioUnitario': precioUnitario,
+        'cantidad': _cantidadPrendas,
+        'subtotal': subtotal,
+      });
+
+      // Actualizar el importe total
+      double importeTotalActual = double.tryParse(_importeTotalController.text) ?? 0.0;
+      _importeTotalController.text = (importeTotalActual + subtotal).toStringAsFixed(2);
+
+      // Vaciar los campos de prenda después de agregarla
+      _tipoPrendaSeleccionada = null;
+      _servicioSeleccionado = null;
+      _cantidadPrendas = 0;
+      _precioUnitarioController.clear();
+    });
+  } else {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Por favor, complete todos los campos de la prenda')),
+    );
+  }
+}
+
+
+
+
 
   
 
@@ -208,34 +231,52 @@ String? _EstadoPagoNota;
                                     ),
                                   ),
                                 ),
-                                Padding(
-  padding: const EdgeInsets.symmetric(vertical: 8.0),
-  child: DropdownButtonFormField<String>(
-    value: _EstadoPagoNota,
-    items: _EstadoPago
-        .map((estado) => DropdownMenuItem(
-              value: estado,
-              child: Text(estado),
-            ))
-        .toList(),
-    onChanged: (value) {
-      setState(() {
-        _EstadoPagoNota = value;
-      });
-    },
-    decoration: const InputDecoration(
-      border: OutlineInputBorder(),
-      labelText: 'Estado de pago',
-    ),
+DropdownButtonFormField<String>(
+  value: _EstadoPagoNota,
+  items: _EstadoPago
+      .map((estado) => DropdownMenuItem(
+            value: estado,
+            child: Text(estado),
+          ))
+      .toList(),
+  onChanged: _prendas.isNotEmpty
+      ? (value) {
+          setState(() {
+            _EstadoPagoNota = value;
+
+            if (value == 'Pagado') {
+              _abonoController.text = '';
+              double total = _prendas.fold<double>(0.0, (sum, prenda) => sum + prenda['subtotal']);
+              _importeTotalController.text = '0.00'; // Marca como pagado
+            } else if (value == 'No pagado') {
+              _abonoController.text = '';
+              _importeTotalController.text = _prendas.fold<double>(0.0, (sum, prenda) => sum + prenda['subtotal']).toStringAsFixed(2);
+            }
+          });
+        }
+      : null, // Deshabilitar si no hay prendas
+  decoration: InputDecoration(
+    border: OutlineInputBorder(),
+    labelText: 'Estado de pago',
+    hintText: _prendas.isEmpty ? 'Agregue prendas primero' : null,
   ),
 ),
+
+
 
 Padding(
   padding: const EdgeInsets.symmetric(vertical: 8.0),
   child: TextField(
     controller: _abonoController,
-    enabled: _EstadoPagoNota == 'Abono', // Habilitado solo si el estado es "Abono"
+    enabled: _EstadoPagoNota == 'Abono',
     keyboardType: TextInputType.number,
+    onChanged: (value) {
+      setState(() {
+        double abono = double.tryParse(value) ?? 0.0;
+        double importeTotalActual = _prendas.fold<double>(0.0, (sum, prenda) => sum + prenda['subtotal']);
+        _importeTotalController.text = (importeTotalActual - abono).toStringAsFixed(2);
+      });
+    },
     decoration: const InputDecoration(
       border: OutlineInputBorder(),
       labelText: 'Abono',
@@ -243,11 +284,12 @@ Padding(
   ),
 ),
 
+
 Padding(
   padding: const EdgeInsets.symmetric(vertical: 8.0),
   child: TextField(
     controller: _importeTotalController,
-    enabled: false, // Siempre inhabilitado
+    enabled: false, 
     keyboardType: TextInputType.number,
     decoration: const InputDecoration(
       border: OutlineInputBorder(),
@@ -368,15 +410,46 @@ Padding(
                               ],
                             ),
                             const SizedBox(height: 16.0),
-                            Center(
-                              child: ElevatedButton(
-                                onPressed: _agregarPrenda,
-                                child: const Text('Agregar prenda'),
-                                style: ElevatedButton.styleFrom(
-                                  minimumSize: const Size(200, 50),
-                                ),
-                              ),
-                            ),
+Center(
+  child: ElevatedButton(
+    onPressed: _agregarPrenda,
+    child: const Text('Agregar prenda'),
+    style: ElevatedButton.styleFrom(
+      minimumSize: const Size(200, 50),
+    ),
+  ),
+),
+const SizedBox(height: 16.0),
+// Tabla para mostrar las prendas agregadas
+if (_prendas.isNotEmpty)
+  Expanded(
+    child: SingleChildScrollView(
+      scrollDirection: Axis.vertical,
+      child: DataTable(
+        columns: const [
+          DataColumn(label: Text('Tipo')),
+          DataColumn(label: Text('Servicio')),
+          DataColumn(label: Text('Cantidad')),
+          DataColumn(label: Text('Precio Unitario')),
+          DataColumn(label: Text('Subtotal')),
+        ],
+        rows: _prendas
+            .map(
+              (prenda) => DataRow(
+                cells: [
+                  DataCell(Text(prenda['tipo'] ?? '')),
+                  DataCell(Text(prenda['servicio'] ?? '')),
+                  DataCell(Text(prenda['cantidad'].toString())),
+                  DataCell(Text(prenda['precioUnitario'].toStringAsFixed(2))),
+                  DataCell(Text(prenda['subtotal'].toStringAsFixed(2))),
+                ],
+              ),
+            )
+            .toList(),
+      ),
+    ),
+  ),
+
                           ],
                         ),
                       ),

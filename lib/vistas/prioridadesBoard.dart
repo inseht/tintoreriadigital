@@ -74,17 +74,6 @@ class _PrioridadesBoardState extends State<prioridadesBoard> {
                 );
               },
               boardScrollController: boardController,
-              // footerBuilder: (context, columnData) {
-              //   return AppFlowyGroupFooter(
-              //     icon: const Icon(Icons.add, size: 20),
-              //     title: const Text('New'),
-              //     height: 50,
-              //     margin: config.groupBodyPadding,
-              //     onAddButtonClick: () {
-              //       boardController.scrollToBottom(columnData.id);
-              //     },
-              //   );
-              // },
               headerBuilder: (context, columnData) {
                 return AppFlowyGroupHeader(
                   icon: const Icon(Icons.priority_high_outlined),

@@ -61,31 +61,6 @@ class BdModel {
     } catch (e) {
       print('Error al inicializar la base de datos: $e');
     }
-
-          // await db.insert('Prendas', {
-      //   'tipo': 'Camisa',
-      //   'servicio': 'Tintorería',
-      //   'precioUnitario': 100.0,
-      //   'cantidad': 1,
-      // });
-
-      // await db.insert('Notas', {
-      //   'nombreCliente': 'Maria',
-      //   'telefonoCliente': '5555555555',
-      //   'fechaRecibido': '05/11/2024',
-      //   'fechaEstimada': '07/11/2024',
-      //   'importe': 870.0,
-      //   'estadoPago': 'Pagado',
-      //   'prioridad': 2,
-      //   'observaciones' : ':D',
-      //   'estado'  : 'Recibido',
-      //   'abono' : 870.0,
-      // }      
-      // );
-
-    // await db.delete('Notas');
-    // await db.execute('DELETE FROM sqlite_sequence WHERE name="Notas"');
-    
     return db;
   }
 
