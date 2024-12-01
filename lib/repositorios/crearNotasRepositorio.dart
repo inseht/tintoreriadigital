@@ -12,6 +12,10 @@ class CrearNotasRepositorio {
     List<String> obtenerServicios() {
     return ['Tintorería', 'Sastrería', 'Ambos', 'Otro'];
   }
+
+      List<String> obtenerTiposPrenda() {
+    return ['Tintorería', 'Sastrería', 'Ambos', 'Otro'];
+  }
 }
 
 

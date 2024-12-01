@@ -25,23 +25,20 @@ class _CrearNotaState extends State<CrearNota> {
   DateTime? _fechaInicio;
   DateTime? _fechaFin;
   String? _tipoPrendaSeleccionada;
-String? _EstadoPagoNota;
-  final List<String> _tiposPrenda = ['Camisa', 'Pantalón', 'Chaqueta', 'Vestido'];
-
-  final List<String> _EstadoPago = ['Pagado', 'Abono', 'No pagado'];
+  String? _EstadoPagoNota;
 
   int _cantidadPrendas = 0;
 
-  // Servicios desde el repositorio
   final List<String> _servicios = CrearNotasRepositorio().obtenerServicios();
+  final List<String> _EstadoPago = CrearNotasRepositorio().obtenerEstadosPago();
+  final List<String> _tiposPrenda = CrearNotasRepositorio().obtenerTiposPrenda();
+
   String? _servicioSeleccionado;
 
-  // Lista de prendas agregadas
   List<Map<String, dynamic>> _prendas = [];
 
-  /// Abre el DatePicker en un cuadro de diálogo
   Future<void> _mostrarDatePicker(BuildContext context) async {
-    DateTime fechaMinima = DateTime.now().subtract(Duration(days: 60)); // 60 días es aproximadamente 2 meses.
+    DateTime fechaMinima = DateTime.now().subtract(Duration(days: 60));
 
     await showDialog(
       context: context,
@@ -247,14 +244,14 @@ DropdownButtonFormField<String>(
             if (value == 'Pagado') {
               _abonoController.text = '';
               double total = _prendas.fold<double>(0.0, (sum, prenda) => sum + prenda['subtotal']);
-              _importeTotalController.text = '0.00'; // Marca como pagado
+              _importeTotalController.text = '0.00'; 
             } else if (value == 'No pagado') {
               _abonoController.text = '';
               _importeTotalController.text = _prendas.fold<double>(0.0, (sum, prenda) => sum + prenda['subtotal']).toStringAsFixed(2);
             }
           });
         }
-      : null, // Deshabilitar si no hay prendas
+      : null, 
   decoration: InputDecoration(
     border: OutlineInputBorder(),
     labelText: 'Estado de pago',
