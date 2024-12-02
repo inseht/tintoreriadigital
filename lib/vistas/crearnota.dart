@@ -19,20 +19,17 @@ class _CrearNotaState extends State<CrearNota> {
   final TextEditingController _estadoPagoController = TextEditingController();
   final TextEditingController _abonoController = TextEditingController();
   final TextEditingController _importeTotalController = TextEditingController();
-  final TextEditingController _precioUnitarioController = TextEditingController(); 
+  final TextEditingController _precioUnitarioController = TextEditingController();
 
   DateTime? _fechaInicio;
   DateTime? _fechaFin;
   String? _tipoPrendaSeleccionada;
   String? _EstadoPagoNota;
+  String? _estadoNota;
+  String? _servicioSeleccionado;
 
   int _cantidadPrendas = 0;
 
-  List<String> _servicios = ['Lavado', 'Planchado', 'Tintorería'];
-  List<String> _EstadoPago = ['Pagado', 'No pagado', 'Abono'];
-  List<String> _tiposPrenda = ['Camisa', 'Pantalón', 'Abrigo'];
-
-  String? _servicioSeleccionado;
 
   List<Map<String, dynamic>> _prendas = [];
 
@@ -116,36 +113,31 @@ void _agregarPrenda() {
   }
 }
 
-
-
-
-
-  
-
-  // Método para enviar los datos al BLoC
-  void _crearNota() {
-    if (_fechaInicio == null || _fechaFin == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Debe seleccionar un rango de fechas')),
-      );
-      return;
-    }
-
-    final Map<String, dynamic> nota = {
-      'nombreCliente': _nombreController.text,
-      'telefonoCliente': _telefonoController.text,
-      'fechaRecibido': _fechaInicio,
-      'fechaEstimada': _fechaFin,
-      'importe': double.tryParse(_importeTotalController.text) ?? 0.0,
-      'estadoPago': _estadoPagoController.text,
-      'prioridad': 1, // Puedes obtener esta información de alguna parte o input
-      'observaciones': _observacionesController.text,
-      'estado': 'Recibido', // Por defecto o según el caso
-    };
-
-    // Enviar al BLoC
-    context.read<CrearNotaBloc>().add(EnviarFormulario(nota: nota, prendas: _prendas));
+void _crearNota() {
+  if (_fechaInicio == null || _fechaFin == null) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Debe seleccionar un rango de fechas')),
+    );
+    return;
   }
+
+  final Map<String, dynamic> nota = {
+    'nombreCliente': _nombreController.text,
+    'telefonoCliente': _telefonoController.text,
+    'fechaRecibido': _fechaInicio,
+    'fechaEstimada': _fechaFin,
+    'importe': double.tryParse(_importeTotalController.text) ?? 0.0,
+    'estadoPago': _estadoPagoController.text,
+    'prioridad': 1, // Puedes obtener esta información de alguna parte o input
+    'observaciones': _observacionesController.text,
+    'estado': _estadoNota, // Estado de la nota
+  };
+
+  final List<Map<String, dynamic>> prendas = []; // Aquí puedes llenar la lista de prendas
+
+  context.read<CrearNotaBloc>().add(EnviarFormulario(nota: nota, prendas: prendas));
+}
+
 
   @override
   Widget build(BuildContext context) {
@@ -227,35 +219,73 @@ void _agregarPrenda() {
                                     ),
                                   ),
                                 ),
-DropdownButtonFormField<String>(
-  value: _EstadoPagoNota,
-  items: _EstadoPago
-      .map((estado) => DropdownMenuItem(
-            value: estado,
-            child: Text(estado),
-          ))
-      .toList(),
-  onChanged: _prendas.isNotEmpty
-      ? (value) {
+BlocBuilder<CrearNotaBloc, CrearNotaState>(
+  builder: (context, state) {
+    if (state is CrearNotaInicial) {
+      return DropdownButtonFormField<String>(
+        value: _estadoNota, // La opción seleccionada actualmente
+        items: state.estadosNota.map((estado) => DropdownMenuItem<String>(
+              value: estado, // Asigna el valor del ítem
+              child: Text(estado), // Muestra el texto correspondiente
+            )).toList(),
+        onChanged: (value) {
           setState(() {
-            _EstadoPagoNota = value;
-
-            if (value == 'Pagado') {
-              _abonoController.text = '';
-              double total = _prendas.fold<double>(0.0, (sum, prenda) => sum + prenda['subtotal']);
-              _importeTotalController.text = '0.00'; 
-            } else if (value == 'No pagado') {
-              _abonoController.text = '';
-              _importeTotalController.text = _prendas.fold<double>(0.0, (sum, prenda) => sum + prenda['subtotal']).toStringAsFixed(2);
-            }
+            _estadoNota = value; // Actualiza la opción seleccionada
           });
-        }
-      : null, 
-  decoration: InputDecoration(
-    border: OutlineInputBorder(),
-    labelText: 'Estado de pago',
-    hintText: _prendas.isEmpty ? 'Agregue prendas primero' : null,
-  ),
+        },
+        decoration: const InputDecoration(
+          border: OutlineInputBorder(),
+          labelText: 'Estado', // Etiqueta del Dropdown
+        ),
+      );
+    }
+    return CircularProgressIndicator(); // Muestra un indicador de carga si el estado no es CrearNotaInicial
+  },
+),
+
+
+                            const SizedBox(height: 8.0),
+
+BlocBuilder<CrearNotaBloc, CrearNotaState>(
+  builder: (context, state) {
+    if (state is CrearNotaInicial) {
+      return DropdownButtonFormField<String>(
+        value: _EstadoPagoNota,
+        items: state.estadosPago
+            .map((estado) => DropdownMenuItem<String>(
+                  value: estado,
+                  child: Text(estado),
+                ))
+            .toList(),
+        onChanged: _prendas.isNotEmpty
+            ? (value) {
+                setState(() {
+                  _EstadoPagoNota = value;
+
+                  if (value == 'Pagado') {
+                    _abonoController.text = '';
+                    double total = _prendas.fold<double>(
+                        0.0, (sum, prenda) => sum + prenda['subtotal']);
+                    _importeTotalController.text = '0.00';
+                  } else if (value == 'No pagado') {
+                    _abonoController.text = '';
+                    _importeTotalController.text =
+                        _prendas.fold<double>(
+                                0.0, (sum, prenda) => sum + prenda['subtotal'])
+                            .toStringAsFixed(2);
+                  }
+                });
+              }
+            : null,
+        decoration: InputDecoration(
+          border: OutlineInputBorder(),
+          labelText: 'Estado de pago',
+          hintText: _prendas.isEmpty ? 'Agregue prendas primero' : null,
+        ),
+      );
+    }
+    return CircularProgressIndicator(); // Muestra un indicador de carga si el estado no es CrearNotaInicial
+  },
 ),
 
 
@@ -296,7 +326,7 @@ Padding(
 
                               ],
                             ),
-                            const SizedBox(height: 16.0),
+                            const SizedBox(height: 8.0),
                             Center(
                               child: Row(
                                 mainAxisSize: MainAxisSize.min,
@@ -319,8 +349,7 @@ Padding(
                       ),
                     ),
                   ),
-                  const SizedBox(width: 16.0),
-                  // Card de Prendas
+                  const SizedBox(width: 8.0),
                   Expanded(
                     child: Card(
                       child: Padding(
@@ -332,50 +361,66 @@ Padding(
                               'Prendas',
                               style: TextStyle(fontSize: 16.0),
                             ),
-                            const SizedBox(height: 16.0),
+                            const SizedBox(height: 8.0),
                             Column(
                               children: [
                                 Padding(
                                   padding: const EdgeInsets.symmetric(vertical: 8.0),
-                                  child: DropdownButtonFormField<String>(
-                                    value: _tipoPrendaSeleccionada,
-                                    items: _tiposPrenda
-                                        .map((tipo) => DropdownMenuItem(
-                                              value: tipo,
-                                              child: Text(tipo),
-                                            ))
-                                        .toList(),
-                                    onChanged: (value) {
-                                      setState(() {
-                                        _tipoPrendaSeleccionada = value;
-                                      });
-                                    },
-                                    decoration: const InputDecoration(
-                                      border: OutlineInputBorder(),
-                                      labelText: 'Tipo de prenda',
-                                    ),
-                                  ),
+                                  child: BlocBuilder<CrearNotaBloc, CrearNotaState>(
+  builder: (context, state) {
+    if (state is CrearNotaInicial) {
+      return DropdownButtonFormField<String>(
+        value: _tipoPrendaSeleccionada,
+        items: state.tiposPrenda
+            .map((tipo) => DropdownMenuItem<String>(
+                  value: tipo,
+                  child: Text(tipo),
+                ))
+            .toList(),
+        onChanged: (value) {
+          setState(() {
+            _tipoPrendaSeleccionada = value; // Actualiza la opción seleccionada
+          });
+        },
+        decoration: const InputDecoration(
+          border: OutlineInputBorder(),
+          labelText: 'Tipo de prenda',
+        ),
+      );
+    }
+    return CircularProgressIndicator(); // Muestra un indicador de carga si el estado no es CrearNotaInicial
+  },
+),
+
                                 ),
                                 Padding(
                                   padding: const EdgeInsets.symmetric(vertical: 8.0),
-                                  child: DropdownButtonFormField<String>(
-                                    value: _servicioSeleccionado,
-                                    items: _servicios
-                                        .map((servicio) => DropdownMenuItem(
-                                              value: servicio,
-                                              child: Text(servicio),
-                                            ))
-                                        .toList(),
-                                    onChanged: (value) {
-                                      setState(() {
-                                        _servicioSeleccionado = value;
-                                      });
-                                    },
-                                    decoration: const InputDecoration(
-                                      border: OutlineInputBorder(),
-                                      labelText: 'Servicios',
-                                    ),
-                                  ),
+                                  child: BlocBuilder<CrearNotaBloc, CrearNotaState>(
+  builder: (context, state) {
+    if (state is CrearNotaInicial) {
+      return DropdownButtonFormField<String>(
+        value: _servicioSeleccionado,
+        items: state.servicios
+            .map((servicio) => DropdownMenuItem<String>(
+                  value: servicio,
+                  child: Text(servicio),
+                ))
+            .toList(),
+        onChanged: (value) {
+          setState(() {
+            _servicioSeleccionado = value;
+          });
+        },
+        decoration: const InputDecoration(
+          border: OutlineInputBorder(),
+          labelText: 'Servicios',
+        ),
+      );
+    }
+    return CircularProgressIndicator(); // Muestra un indicador de carga si el estado no es CrearNotaInicial
+  },
+),
+
                                 ),
                                 Padding(
                                   padding: const EdgeInsets.symmetric(vertical: 8.0),

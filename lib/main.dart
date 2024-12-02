@@ -9,6 +9,7 @@ import 'vistas/proveedores.dart';
 import 'vistas/prioridadesBoard.dart';
 import 'bloc/proveedoresBloc.dart';
 import 'bloc/prioridadesBloc.dart';
+import 'bloc/crearNotaBloc.dart';
 
 void main() {
   runApp(const MainApp());
@@ -40,6 +41,10 @@ class MainApp extends StatelessWidget {
           BlocProvider<PrioridadesBloc>(
             create: (_) => PrioridadesBloc(),
           ),
+          // Añadiendo CrearNotaBloc
+          BlocProvider<CrearNotaBloc>(
+            create: (_) => CrearNotaBloc(),
+          ),
         ],
         child: Consumer<ThemeProvider>(
           builder: (context, themeProvider, child) {
@@ -59,3 +64,4 @@ class MainApp extends StatelessWidget {
     );
   }
 }
+
