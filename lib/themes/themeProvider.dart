@@ -7,11 +7,11 @@ class ThemeProvider extends ChangeNotifier {
 
   set isDark(bool value) {
     _isDark = value;
-    notifyListeners();  // Notifica a los consumidores cuando cambia el estado
+    notifyListeners();  
   }
 
   void toggleTheme() {
-    _isDark = !_isDark;  // Cambia el estado de _isDark
-    notifyListeners();  // Notifica a los consumidores sobre el cambio
+    _isDark = !_isDark; 
+    notifyListeners();  
   }
 }

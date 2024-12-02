@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:bitsdojo_window/bitsdojo_window.dart';
 import 'package:provider/provider.dart';
-import 'package:tintoreriadigital/repositorios/proveedoresRepositorio.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'themes/appTheme.dart';
 import 'themes/themeProvider.dart';
 import 'vistas/vistaPrincipal.dart';
 import 'vistas/proveedores.dart';
+import 'vistas/prioridadesBoard.dart';
 import 'bloc/proveedoresBloc.dart';
+import 'bloc/prioridadesBloc.dart';
 
 void main() {
   runApp(const MainApp());
@@ -29,28 +31,30 @@ class MainApp extends StatelessWidget {
         ChangeNotifierProvider<ThemeProvider>(
           create: (_) => ThemeProvider(),
         ),
-        Provider<ProveedoresRepositorio>(
-          create: (_) => ProveedoresRepositorio(),
-        ),
-        Provider<ProveedoresBloc>(
-          create: (context) => ProveedoresBloc(
-            context.read<ProveedoresRepositorio>(),
-          ),
-          dispose: (context, bloc) => bloc.close(),
-        ),
       ],
-      child: Consumer<ThemeProvider>(
-        builder: (context, themeProvider, child) {
-          return MaterialApp(
-            theme: AppTheme.lightTheme,
-            darkTheme: AppTheme.darkTheme,
-            themeMode: themeProvider.isDark ? ThemeMode.dark : ThemeMode.light,
-            home: const MainView(),
-            routes: {
-              '/proveedores': (context) => const Proveedores(),             
-            },
-          );
-        },
+      child: MultiBlocProvider(
+        providers: [
+          BlocProvider<ProveedoresBloc>(
+            create: (_) => ProveedoresBloc(),
+          ),
+          BlocProvider<PrioridadesBloc>(
+            create: (_) => PrioridadesBloc(),
+          ),
+        ],
+        child: Consumer<ThemeProvider>(
+          builder: (context, themeProvider, child) {
+            return MaterialApp(
+              theme: AppTheme.lightTheme,
+              darkTheme: AppTheme.darkTheme,
+              themeMode: themeProvider.isDark ? ThemeMode.dark : ThemeMode.light,
+              home: const MainView(),
+              routes: {
+                '/proveedores': (context) => const Proveedores(),
+                '/prioridades': (context) => const prioridadesBoard(),
+              },
+            );
+          },
+        ),
       ),
     );
   }

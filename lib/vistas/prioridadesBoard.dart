@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:appflowy_board/appflowy_board.dart';
-import 'package:tintoreriadigital/bd/bdmodel.dart'; 
+import 'package:flutter_bloc/flutter_bloc.dart';
+import '../bloc/prioridadesBloc.dart';
 
 class prioridadesBoard extends StatefulWidget {
   const prioridadesBoard({super.key});
@@ -10,7 +11,7 @@ class prioridadesBoard extends StatefulWidget {
 }
 
 class _PrioridadesBoardState extends State<prioridadesBoard> {
-  late Future<List<Map<String, dynamic>>> _notasConPrioridad;
+  late AppFlowyBoardScrollController boardController;
   final AppFlowyBoardController controller = AppFlowyBoardController(
     onMoveGroup: (fromGroupId, fromIndex, toGroupId, toIndex) {
       debugPrint('Move item from $fromIndex to $toIndex');
@@ -23,27 +24,11 @@ class _PrioridadesBoardState extends State<prioridadesBoard> {
     },
   );
 
-  late AppFlowyBoardScrollController boardController;
-
   @override
   void initState() {
     super.initState();
     boardController = AppFlowyBoardScrollController();
-    _notasConPrioridad = BdModel.obtenerNotasConPrioridad1(); 
-    _notasConPrioridad.then((notas) {
-      final groupPrioridades = AppFlowyGroupData(
-        id: "Prioridades",
-        name: "Prioridades",
-        items: notas.map((nota) {
-          return RichTextItem(
-            title: '${nota['nombreCliente']} - Nota #${nota['idNota']}',
-            subtitle: 'Importe: ${nota['importe']} | Fecha: ${nota['fechaRecibido']} | Estado: ${nota['estado']}',
-          );
-        }).toList(),
-      );
-
-      controller.addGroup(groupPrioridades);
-    });
+    context.read<PrioridadesBloc>().add(CargarNotasEvent());
   }
 
   @override
@@ -54,16 +39,25 @@ class _PrioridadesBoardState extends State<prioridadesBoard> {
     );
 
     return Scaffold(
-      body: FutureBuilder<List<Map<String, dynamic>>>(
-        future: _notasConPrioridad,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          } else if (snapshot.hasError) {
-            return Center(child: Text('Error: ${snapshot.error}'));
-          } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return const Center(child: Text('No hay notas con prioridad 1.'));
-          } else {
+      body: BlocBuilder<PrioridadesBloc, PrioridadesState>(
+        builder: (context, state) {
+          if (state is NotasCargadasState) {
+            if (state.notas.isEmpty) {
+              return const Center(child: Text('No hay notas con prioridad 1.'));
+            }
+
+            final groupPrioridades = AppFlowyGroupData(
+              id: "Prioridades",
+              name: "Prioridades",
+              items: state.notas.map((nota) {
+                return RichTextItem(
+                  title: '${nota['nombreCliente']} - Nota #${nota['idNota']}',
+                  subtitle: 'Importe: ${nota['importe']} | Fecha: ${nota['fechaRecibido']} | Estado: ${nota['estado']}',
+                );
+              }).toList(),
+            );
+
+            controller.addGroup(groupPrioridades);
 
             return AppFlowyBoard(
               controller: controller,
@@ -95,6 +89,8 @@ class _PrioridadesBoardState extends State<prioridadesBoard> {
               groupConstraints: const BoxConstraints.tightFor(width: 400),
               config: config,
             );
+          } else {
+            return const Center(child: CircularProgressIndicator());
           }
         },
       ),

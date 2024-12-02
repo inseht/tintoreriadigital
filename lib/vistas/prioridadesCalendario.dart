@@ -34,11 +34,11 @@ class _PrioridadesCalendarioState extends State<prioridadesCalendario> {
             ),
             calendarStyle: const CalendarStyle(
               selectedDecoration: BoxDecoration(
-                color: Colors.blue,
+                color: Color.fromARGB(255, 72, 100, 122),
                 shape: BoxShape.circle,
               ),
               todayDecoration: BoxDecoration(
-                color: Colors.orange,
+                color: Color.fromARGB(255, 159, 187, 249),
                 shape: BoxShape.circle,
               ),
             ),

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../bloc/proveedoresBloc.dart';
-import '../repositorios/proveedoresRepositorio.dart';
 import '../bd/bdmodel.dart';
 
 class Proveedores extends StatefulWidget {
@@ -86,7 +85,7 @@ class _ProveedoresState extends State<Proveedores> {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) => ProveedoresBloc(ProveedoresRepositorio())..add(ObtenerProveedores()),
+create: (_) => ProveedoresBloc()..add(ObtenerProveedores()),
       child: Scaffold(
         body: Column(
           children: [
@@ -107,7 +106,7 @@ class _ProveedoresState extends State<Proveedores> {
               ),
             ),
             AnimatedCrossFade(
-              firstChild: Container(height: 0), // Espacio vacío sin redibujar bordes
+              firstChild: Container(height: 0),
               secondChild: Padding(
                 padding: const EdgeInsets.all(10.0),
                 child: Column(
@@ -151,12 +150,9 @@ class _ProveedoresState extends State<Proveedores> {
                   ],
                 ),
               ),
-              crossFadeState: mostrarFormulario
-                  ? CrossFadeState.showSecond
-                  : CrossFadeState.showFirst,
+              crossFadeState: mostrarFormulario ? CrossFadeState.showSecond : CrossFadeState.showFirst,
               duration: const Duration(milliseconds: 300),
             ),
-
             Expanded(
               child: BlocBuilder<ProveedoresBloc, ProveedoresState>(
                 builder: (context, state) {

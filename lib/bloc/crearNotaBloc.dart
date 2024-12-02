@@ -1,6 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:tintoreriadigital/repositorios/crearNotasRepositorio.dart';
 
+// Estados
 abstract class CrearNotaState {}
 
 class CrearNotaInicial extends CrearNotaState {}
@@ -14,6 +14,28 @@ class FormularioInvalido extends CrearNotaState {
 
 class FormularioEnviado extends CrearNotaState {}
 
+class CrearPrendaInProgress extends CrearNotaState {}
+
+class CrearPrendaSuccess extends CrearNotaState {}
+
+class CrearPrendaFailure extends CrearNotaState {
+  final String error;
+  CrearPrendaFailure(this.error);
+}
+
+  List<String> obtenerEstadosPago() {
+    return ['Pendiente', 'Pagado', 'Abonado'];
+  }
+
+    List<String> obtenerServicios() {
+    return ['Tintorería', 'Sastrería', 'Ambos', 'Otro'];
+  }
+
+      List<String> obtenerTiposPrenda() {
+    return ['Tintorería', 'Sastrería', 'Ambos', 'Otro'];
+  }
+
+// Eventos
 abstract class CrearNotaEvent {}
 
 class ValidarFormulario extends CrearNotaEvent {
@@ -46,11 +68,14 @@ class EnviarFormulario extends CrearNotaEvent {
   EnviarFormulario({required this.nota, required this.prendas});
 }
 
+class CrearPrendaSubmitted extends CrearNotaEvent {
+  final Map<String, dynamic> prenda;
+  CrearPrendaSubmitted(this.prenda);
+}
 
+// Bloc unificado
 class CrearNotaBloc extends Bloc<CrearNotaEvent, CrearNotaState> {
-  final CrearNotasRepositorio repositorio;
-
-  CrearNotaBloc({required this.repositorio}) : super(CrearNotaInicial());
+  CrearNotaBloc() : super(CrearNotaInicial());
 
   @override
   Stream<CrearNotaState> mapEventToState(CrearNotaEvent event) async* {
@@ -64,10 +89,18 @@ class CrearNotaBloc extends Bloc<CrearNotaEvent, CrearNotaState> {
 
     if (event is EnviarFormulario) {
       try {
-        await repositorio.crearNotaConPrendas(event.nota, event.prendas);
         yield FormularioEnviado();
       } catch (e) {
         yield FormularioInvalido('Error al guardar la nota: $e');
+      }
+    }
+
+    if (event is CrearPrendaSubmitted) {
+      yield CrearPrendaInProgress();
+      try {
+        yield CrearPrendaSuccess();
+      } catch (e) {
+        yield CrearPrendaFailure('Error al agregar la prenda: $e');
       }
     }
   }

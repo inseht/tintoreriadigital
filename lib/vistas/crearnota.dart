@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:syncfusion_flutter_datepicker/datepicker.dart';
 import 'package:intl/intl.dart';
 import 'package:tintoreriadigital/bloc/crearNotaBloc.dart';
-import '../repositorios/crearNotasRepositorio.dart';
 import 'package:roundcheckbox/roundcheckbox.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -29,9 +28,9 @@ class _CrearNotaState extends State<CrearNota> {
 
   int _cantidadPrendas = 0;
 
-  final List<String> _servicios = CrearNotasRepositorio().obtenerServicios();
-  final List<String> _EstadoPago = CrearNotasRepositorio().obtenerEstadosPago();
-  final List<String> _tiposPrenda = CrearNotasRepositorio().obtenerTiposPrenda();
+  List<String> _servicios = ['Lavado', 'Planchado', 'Tintorería'];
+  List<String> _EstadoPago = ['Pagado', 'No pagado', 'Abono'];
+  List<String> _tiposPrenda = ['Camisa', 'Pantalón', 'Abrigo'];
 
   String? _servicioSeleccionado;
 

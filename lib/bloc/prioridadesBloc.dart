@@ -1,5 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../repositorios/prioridadesRepositorio.dart';
+import '../bd/bdmodel.dart';
 
 abstract class PrioridadesEvent {}
 
@@ -13,18 +13,15 @@ class NotasCargadasState extends PrioridadesState {
 }
 
 class PrioridadesBloc extends Bloc<PrioridadesEvent, PrioridadesState> {
-  final PrioridadesRepositorio repositorio;
+  PrioridadesBloc() : super(NotasCargadasState([])) {
+    on<CargarNotasEvent>(_onCargarNotas);
+  }
 
-  PrioridadesBloc(this.repositorio) : super(NotasCargadasState([]));
-
-  @override
-  Stream<PrioridadesState> mapEventToState(PrioridadesEvent event) async* {
-    if (event is CargarNotasEvent) {
-      final notasConPrioridad1 = await repositorio.obtenerNotasConPrioridad1();
-      final notasPendientes = await repositorio.obtenerNotasPendientes();
-      final notas = [...notasConPrioridad1, ...notasPendientes];
-
-      yield NotasCargadasState(notas);
-    }
+  Future<void> _onCargarNotas(CargarNotasEvent event, Emitter<PrioridadesState> emit) async {
+    final notasConPrioridad1 = await BdModel.obtenerNotas();
+    final notas = notasConPrioridad1
+        .where((nota) => nota['prioridad'] == 1 || nota['estado'] == 'Pendiente')
+        .toList();
+    emit(NotasCargadasState(notas));
   }
 }
