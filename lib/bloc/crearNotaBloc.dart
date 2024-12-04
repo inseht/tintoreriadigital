@@ -11,7 +11,7 @@ class CrearNotaInicial extends CrearNotaState {
   final List<String> tiposPrenda;
 
   CrearNotaInicial({
-    this.estadosNota = const ['Pendiente', 'En proceso', 'Finalizado'],
+    this.estadosNota = const ['Recibido', 'En proceso', 'Finalizado'],
     this.estadosPago = const ['Pendiente', 'Pagado', 'Abonado'],
     this.servicios = const ['Tintorería', 'Sastrería', 'Ambos', 'Otro'],
     this.tiposPrenda = const ['Saco', 'Camisa', 'Pantalon', 'Vestido', 'Sueter', 'Traje' , 'Colcha', 'Cortina', 'Blusa', 'Otro'],
@@ -71,8 +71,10 @@ class ValidarFormulario extends CrearNotaEvent {
 class EnviarFormulario extends CrearNotaEvent {
   final Map<String, dynamic> nota;
   final List<Map<String, dynamic>> prendas;
+
   EnviarFormulario({required this.nota, required this.prendas});
 }
+
 
 class CrearPrendaSubmitted extends CrearNotaEvent {
   final Map<String, dynamic> prenda;

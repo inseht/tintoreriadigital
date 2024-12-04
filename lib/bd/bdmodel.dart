@@ -11,6 +11,8 @@ class BdModel {
 
     var db = await databaseFactory.openDatabase(path);
 
+      await db.execute('PRAGMA foreign_keys = ON');
+      
     try {
       await db.execute('''
         CREATE TABLE IF NOT EXISTS Notas (
@@ -28,15 +30,18 @@ class BdModel {
         )
       ''');
 
-      await db.execute('''
-        CREATE TABLE IF NOT EXISTS Prendas (
-          idPrenda INTEGER NOT NULL PRIMARY KEY,
-          tipo TEXT NOT NULL,
-          servicio TEXT NOT NULL,
-          precioUnitario INTEGER NOT NULL,
-          cantidad INTEGER NOT NULL
-        )
-      ''');
+await db.execute('''
+  CREATE TABLE IF NOT EXISTS Prendas (
+    idPrenda INTEGER NOT NULL PRIMARY KEY,
+    tipo TEXT NOT NULL,
+    servicio TEXT NOT NULL,
+    precioUnitario INTEGER NOT NULL,
+    cantidad INTEGER NOT NULL,
+    idNota INTEGER NOT NULL,
+    FOREIGN KEY (idNota) REFERENCES Notas(idNota) ON DELETE CASCADE
+  )
+''');
+
 
       await db.execute('''
         CREATE TABLE IF NOT EXISTS NotaPrenda (

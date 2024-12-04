@@ -50,9 +50,10 @@ class _PrioridadesBoardState extends State<prioridadesBoard> {
               id: "Prioridades",
               name: "Prioridades",
               items: state.notas.map((nota) {
-                return RichTextItem(
+                return SimpleItem(
                   title: '${nota['nombreCliente']} - Nota #${nota['idNota']}',
                   subtitle: 'Importe: ${nota['importe']} | Fecha: ${nota['fechaRecibido']} | Estado: ${nota['estado']}',
+                  notas: nota,  // Pasa la nota completa si es necesario mostrarla
                 );
               }).toList(),
             );
@@ -101,76 +102,54 @@ class _PrioridadesBoardState extends State<prioridadesBoard> {
     final cardBackgroundColor = Theme.of(context).cardColor;
     final textColor = Theme.of(context).textTheme.bodyLarge?.color ?? Colors.black;
 
-    if (item is RichTextItem) {
-      return RichTextCard(item: item);
+    if (item is SimpleItem) {
+      return _buildNotaCard(item);  // Ahora usamos este método
     }
 
     throw UnimplementedError();
   }
-}
 
-class RichTextCard extends StatelessWidget {
-  final RichTextItem item;
-
-  const RichTextCard({
-    required this.item,
-    Key? key,
-  }) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    final Color cardBackgroundColor = Theme.of(context).cardColor;
-    final Color titleColor = Theme.of(context).textTheme.bodyLarge?.color ?? Colors.black;
-    final Color subtitleColor = Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.7) ?? Colors.grey;
-
-    return Align(
-      alignment: Alignment.centerLeft,
-      child: Container(
-        decoration: BoxDecoration(
-          color: cardBackgroundColor,
-          borderRadius: BorderRadius.circular(8),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.1),
-              blurRadius: 4,
-              offset: const Offset(0, 2),
+  Widget _buildNotaCard(SimpleItem item) {
+    return Card(
+      margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+      elevation: 4,
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              item.title,
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
+            const SizedBox(height: 8),
+            Text(
+              item.subtitle,
+              style: const TextStyle(fontSize: 14, color: Colors.grey),
+            ),
+            const SizedBox(height: 12),
+            // Aquí puedes agregar detalles adicionales si es necesario
+            Text(
+              'Detalles de la Nota:',
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 8),
+            Text('Observaciones: ${item.notas['observaciones'] ?? 'N/A'}'),
+            Text('Abono: ${item.notas['abono']}'),
+            // Si deseas mostrar las prendas asociadas, puedes iterar sobre ellas aquí
           ],
-        ),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                item.title,
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: titleColor,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                item.subtitle,
-                style: TextStyle(
-                  fontSize: 14,
-                  color: subtitleColor,
-                ),
-              ),
-            ],
-          ),
         ),
       ),
     );
   }
 }
 
-class RichTextItem extends AppFlowyGroupItem {
+class SimpleItem extends AppFlowyGroupItem {
   final String title;
   final String subtitle;
+  final Map<String, dynamic> notas;
 
-  RichTextItem({required this.title, required this.subtitle});
+  SimpleItem({required this.title, required this.subtitle, required this.notas});
 
   @override
   String get id => title;

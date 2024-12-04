@@ -24,8 +24,8 @@ class _CrearNotaState extends State<CrearNota> {
   DateTime? _fechaInicio;
   DateTime? _fechaFin;
   String? _tipoPrendaSeleccionada;
-  String? _EstadoPagoNota;
-  String? _estadoNota;
+String? _EstadoPagoNota = 'Pendiente';
+  String? _estadoNota = 'Recibido';
   String? _servicioSeleccionado;
 
   int _cantidadPrendas = 0;
@@ -122,33 +122,37 @@ class _CrearNotaState extends State<CrearNota> {
         const SnackBar(content: Text('Por favor, complete todos los campos de la prenda')),
       );
     }
+
+    print("Agregando prenda: $_tipoPrendaSeleccionada, $_servicioSeleccionado, $_cantidadPrendas");
+
   }
 
-  void _crearNota() {
-    // Validar que todos los campos estén completos antes de crear la nota
-    if (_fechaInicio == null || _fechaFin == null || _nombreController.text.trim().isEmpty || _telefonoController.text.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Por favor, complete todos los campos antes de crear la nota')),
-      );
-      return;
-    }
-
-    final Map<String, dynamic> nota = {
-      'nombreCliente': _nombreController.text,
-      'telefonoCliente': _telefonoController.text,
-      'fechaRecibido': _fechaInicio,
-      'fechaEstimada': _fechaFin,
-      'importe': double.tryParse(_importeTotalController.text) ?? 0.0,
-      'estadoPago': _estadoPagoController.text,
-      'prioridad': 1, // Puedes obtener esta información de alguna parte o input
-      'observaciones': _observacionesController.text,
-      'estado': _estadoNota, // Estado de la nota
-    };
-
-    final List<Map<String, dynamic>> prendas = _prendas;
-
-    context.read<CrearNotaBloc>().add(EnviarFormulario(nota: nota, prendas: prendas));
+void _crearNota() {
+  if (_fechaInicio == null || _fechaFin == null || _nombreController.text.trim().isEmpty || _telefonoController.text.trim().isEmpty) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Por favor, complete todos los campos antes de crear la nota')),
+    );
+    return;
   }
+
+  final Map<String, dynamic> nota = {
+    'nombreCliente': _nombreController.text,
+    'telefonoCliente': _telefonoController.text,
+    'fechaRecibido': _fechaInicio,
+    'fechaEstimada': _fechaFin,
+    'importe': double.tryParse(_importeTotalController.text) ?? 0.0,
+    'estadoPago': _estadoPagoController.text,
+    'prioridad': 1,
+    'observaciones': _observacionesController.text,
+    'estado': _estadoNota,
+  };
+
+  context.read<CrearNotaBloc>().add(EnviarFormulario(nota: nota, prendas: _prendas));
+
+  // Limpiar formulario
+  _limpiarFormulario();
+}
+
 
 
   @override
@@ -216,10 +220,6 @@ class _CrearNotaState extends State<CrearNota> {
                                 ),
                                 Padding(
                                   padding: const EdgeInsets.symmetric(vertical: 8.0),
-                                  child: Text(
-                                    'Fecha estimada de entrega: ${_fechaFin != null ? DateFormat('dd/MM/yyyy').format(_fechaFin!) : 'Seleccione un rango'}',
-                                    style: const TextStyle(fontSize: 14.0),
-                                  ),
                                 ),
                                 Padding(
                                   padding: const EdgeInsets.symmetric(vertical: 8.0),
@@ -256,7 +256,7 @@ BlocBuilder<CrearNotaBloc, CrearNotaState>(
 ),
 
 
-                            const SizedBox(height: 8.0),
+const SizedBox(height: 8.0),
 
 BlocBuilder<CrearNotaBloc, CrearNotaState>(
   builder: (context, state) {
@@ -269,26 +269,20 @@ BlocBuilder<CrearNotaBloc, CrearNotaState>(
                   child: Text(estado),
                 ))
             .toList(),
-        onChanged: _prendas.isNotEmpty
-            ? (value) {
-                setState(() {
-                  _EstadoPagoNota = value;
+onChanged: _prendas.isNotEmpty ? (value) {
+  setState(() {
+    _EstadoPagoNota = value;
+    if (value == 'Pagado') {
+      _abonoController.clear();
+      _importeTotalController.text = '0.00';
+    } else if (value == 'No pagado') {
+      _abonoController.clear();
+      double total = _prendas.fold<double>(0.0, (sum, prenda) => sum + (prenda['subtotal'] ?? 0.0));
+      _importeTotalController.text = total.toStringAsFixed(2);
+    }
+  });
+} : null,
 
-                  if (value == 'Pagado') {
-                    _abonoController.text = '';
-                    double total = _prendas.fold<double>(
-                        0.0, (sum, prenda) => sum + prenda['subtotal']);
-                    _importeTotalController.text = '0.00';
-                  } else if (value == 'No pagado') {
-                    _abonoController.text = '';
-                    _importeTotalController.text =
-                        _prendas.fold<double>(
-                                0.0, (sum, prenda) => sum + prenda['subtotal'])
-                            .toStringAsFixed(2);
-                  }
-                });
-              }
-            : null,
         decoration: InputDecoration(
           border: OutlineInputBorder(),
           labelText: 'Estado de pago',
@@ -382,23 +376,24 @@ Padding(
   builder: (context, state) {
     if (state is CrearNotaInicial) {
       return DropdownButtonFormField<String>(
-        value: _tipoPrendaSeleccionada,
-        items: state.tiposPrenda
-            .map((tipo) => DropdownMenuItem<String>(
-                  value: tipo,
-                  child: Text(tipo),
-                ))
-            .toList(),
-        onChanged: (value) {
-          setState(() {
-            _tipoPrendaSeleccionada = value; // Actualiza la opción seleccionada
-          });
-        },
-        decoration: const InputDecoration(
-          border: OutlineInputBorder(),
-          labelText: 'Tipo de prenda',
-        ),
-      );
+  value: _tipoPrendaSeleccionada,
+  items: state.tiposPrenda
+      .map((tipo) => DropdownMenuItem<String>(
+            value: tipo,
+            child: Text(tipo),
+          ))
+      .toList(),
+  onChanged: (value) {
+    setState(() {
+      _tipoPrendaSeleccionada = value;
+    });
+  },
+  decoration: const InputDecoration(
+    border: OutlineInputBorder(),
+    labelText: 'Tipo de prenda',
+  ),
+);
+
     }
     return CircularProgressIndicator(); // Muestra un indicador de carga si el estado no es CrearNotaInicial
   },
@@ -437,17 +432,18 @@ Padding(
                                 Padding(
                                   padding: const EdgeInsets.symmetric(vertical: 8.0),
                                   child: TextField(
-                                    keyboardType: TextInputType.number,
-                                    onChanged: (value) {
-                                      setState(() {
-                                        _cantidadPrendas = int.tryParse(value) ?? 0;
-                                      });
-                                    },
-                                    decoration: const InputDecoration(
-                                      border: OutlineInputBorder(),
-                                      labelText: 'Cantidad de prendas',
-                                    ),
-                                  ),
+  keyboardType: TextInputType.number,
+  onChanged: (value) {
+    setState(() {
+      _cantidadPrendas = int.tryParse(value) ?? 0;  // Asegúrate de que el valor sea numérico
+    });
+  },
+  decoration: const InputDecoration(
+    border: OutlineInputBorder(),
+    labelText: 'Cantidad de prendas',
+  ),
+),
+
                                 ),
                                 Padding(
                                   padding: const EdgeInsets.symmetric(vertical: 8.0),
