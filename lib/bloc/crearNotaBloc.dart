@@ -1,7 +1,7 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../bd/bdmodel.dart';
 
 // 1. **Estados**
-
 abstract class CrearNotaState {}
 
 class CrearNotaInicial extends CrearNotaState {
@@ -14,7 +14,7 @@ class CrearNotaInicial extends CrearNotaState {
     this.estadosNota = const ['Pendiente', 'En proceso', 'Finalizado'],
     this.estadosPago = const ['Pendiente', 'Pagado', 'Abonado'],
     this.servicios = const ['Tintorería', 'Sastrería', 'Ambos', 'Otro'],
-    this.tiposPrenda = const ['Tintorería', 'Sastrería', 'Ambos', 'Otro'],
+    this.tiposPrenda = const ['Saco', 'Camisa', 'Pantalon', 'Vestido', 'Sueter', 'Traje' , 'Colcha', 'Cortina', 'Blusa', 'Otro'],
   });
 }
 
@@ -36,8 +36,12 @@ class CrearPrendaFailure extends CrearNotaState {
   CrearPrendaFailure(this.error);
 }
 
-// 2. **Eventos**
+class NotasConPrendasState extends CrearNotaState {
+  final List<Map<String, dynamic>> notasConPrendas;
+  NotasConPrendasState(this.notasConPrendas);
+}
 
+// 2. **Eventos**
 abstract class CrearNotaEvent {}
 
 class ValidarFormulario extends CrearNotaEvent {
@@ -75,7 +79,6 @@ class CrearPrendaSubmitted extends CrearNotaEvent {
   CrearPrendaSubmitted(this.prenda);
 }
 
-// Nuevos eventos para actualizar las listas
 class ActualizarEstadosNota extends CrearNotaEvent {
   final List<String> nuevosEstados;
   ActualizarEstadosNota(this.nuevosEstados);
@@ -95,90 +98,96 @@ class ActualizarTiposPrenda extends CrearNotaEvent {
   final List<String> nuevosTiposPrenda;
   ActualizarTiposPrenda(this.nuevosTiposPrenda);
 }
+
+class CargarNotasConPrendas extends CrearNotaEvent {}
+
 // 3. **BLoC**
-
 class CrearNotaBloc extends Bloc<CrearNotaEvent, CrearNotaState> {
-  CrearNotaBloc() : super(CrearNotaInicial());
+  CrearNotaBloc() : super(CrearNotaInicial()) {
+    on<ValidarFormulario>(_onValidarFormulario);
+    on<EnviarFormulario>(_onEnviarFormulario);
+    on<CrearPrendaSubmitted>(_onCrearPrendaSubmitted);
+    on<CargarNotasConPrendas>(_onCargarNotasConPrendas);
+    on<ActualizarEstadosNota>(_onActualizarEstadosNota);
+    on<ActualizarEstadosPago>(_onActualizarEstadosPago);
+    on<ActualizarServicios>(_onActualizarServicios);
+    on<ActualizarTiposPrenda>(_onActualizarTiposPrenda);
+  }
 
-  @override
-  Stream<CrearNotaState> mapEventToState(CrearNotaEvent event) async* {
-    if (event is ValidarFormulario) {
-      if (event.nombreCliente.isEmpty || event.telefonoCliente.isEmpty) {
-        yield FormularioInvalido('El nombre y teléfono son requeridos');
-      } else {
-        yield FormularioValido();
-      }
-    }
-
-    // Manejo de la lógica para el envío del formulario
-    if (event is EnviarFormulario) {
-      try {
-        // Aquí puedes agregar la lógica para guardar los datos
-        // Por ejemplo, podrías hacer algo como esto:
-        await _guardarNota(event.nota, event.prendas); // Llamada a un método que guarda los datos
-        yield FormularioEnviado(); // Emitir el estado de éxito
-      } catch (e) {
-        yield FormularioInvalido('Error al guardar la nota: $e'); // Si ocurre un error
-      }
-    }
-
-    // Lógica para el manejo de prendas
-    if (event is CrearPrendaSubmitted) {
-      yield CrearPrendaInProgress();
-      try {
-        // Aquí iría la lógica para crear la prenda
-        yield CrearPrendaSuccess();
-      } catch (e) {
-        yield CrearPrendaFailure('Error al agregar la prenda: $e');
-      }
-    }
-
-    // Manejo de la actualización de los estadosNota
-    if (event is ActualizarEstadosNota) {
-      yield CrearNotaInicial(
-        estadosNota: event.nuevosEstados, // Actualiza la lista de estadosNota
-        estadosPago: (state as CrearNotaInicial).estadosPago, // Mantiene los demás valores
-        servicios: (state as CrearNotaInicial).servicios,
-        tiposPrenda: (state as CrearNotaInicial).tiposPrenda,
-      );
-    }
-
-    // Manejo de la actualización de los estadosPago
-    if (event is ActualizarEstadosPago) {
-      yield CrearNotaInicial(
-        estadosPago: event.nuevosEstados,
-        estadosNota: (state as CrearNotaInicial).estadosNota,
-        servicios: (state as CrearNotaInicial).servicios,
-        tiposPrenda: (state as CrearNotaInicial).tiposPrenda,
-      );
-    }
-
-    // Manejo de la actualización de los servicios
-    if (event is ActualizarServicios) {
-      yield CrearNotaInicial(
-        servicios: event.nuevosServicios,
-        estadosPago: (state as CrearNotaInicial).estadosPago,
-        estadosNota: (state as CrearNotaInicial).estadosNota,
-        tiposPrenda: (state as CrearNotaInicial).tiposPrenda,
-      );
-    }
-
-    // Manejo de la actualización de los tiposPrenda
-    if (event is ActualizarTiposPrenda) {
-      yield CrearNotaInicial(
-        tiposPrenda: event.nuevosTiposPrenda,
-        estadosPago: (state as CrearNotaInicial).estadosPago,
-        servicios: (state as CrearNotaInicial).servicios,
-        estadosNota: (state as CrearNotaInicial).estadosNota,
-      );
+  void _onValidarFormulario(ValidarFormulario event, Emitter<CrearNotaState> emit) {
+    if (event.nombreCliente.isEmpty || event.telefonoCliente.isEmpty) {
+      emit(FormularioInvalido('El nombre y teléfono son requeridos'));
+    } else {
+      emit(FormularioValido());
     }
   }
 
-  // Método para guardar los datos en una base de datos (simulado)
-  Future<void> _guardarNota(Map<String, dynamic> nota, List<Map<String, dynamic>> prendas) async {
-    // Aquí se guardaría la nota y las prendas, por ejemplo, en una base de datos
-    await Future.delayed(Duration(seconds: 2)); // Simula el tiempo de guardado
-    print('Nota guardada: $nota');
-    print('Prendas: $prendas');
+  Future<void> _onEnviarFormulario(EnviarFormulario event, Emitter<CrearNotaState> emit) async {
+    emit(CrearPrendaInProgress());
+    try {
+      await BdModel.crearNotaConPrendas(event.nota, event.prendas);
+      emit(FormularioEnviado());
+    } catch (e) {
+      emit(FormularioInvalido('Error al guardar la nota: $e'));
+    }
+  }
+
+  Future<void> _onCrearPrendaSubmitted(CrearPrendaSubmitted event, Emitter<CrearNotaState> emit) async {
+    emit(CrearPrendaInProgress());
+    try {
+      await BdModel.agregarPrenda(event.prenda);
+      emit(CrearPrendaSuccess());
+    } catch (e) {
+      emit(CrearPrendaFailure('Error al agregar la prenda: $e'));
+    }
+  }
+
+  Future<void> _onCargarNotasConPrendas(CargarNotasConPrendas event, Emitter<CrearNotaState> emit) async {
+    try {
+      final datos = await BdModel.obtenerNotasConPrendas();
+      emit(NotasConPrendasState(datos));
+    } catch (e) {
+      emit(FormularioInvalido('Error al cargar notas: $e'));
+    }
+  }
+
+  void _onActualizarEstadosNota(ActualizarEstadosNota event, Emitter<CrearNotaState> emit) {
+    final estadoActual = state as CrearNotaInicial;
+    emit(CrearNotaInicial(
+      estadosNota: event.nuevosEstados,
+      estadosPago: estadoActual.estadosPago,
+      servicios: estadoActual.servicios,
+      tiposPrenda: estadoActual.tiposPrenda,
+    ));
+  }
+
+  void _onActualizarEstadosPago(ActualizarEstadosPago event, Emitter<CrearNotaState> emit) {
+    final estadoActual = state as CrearNotaInicial;
+    emit(CrearNotaInicial(
+      estadosNota: estadoActual.estadosNota,
+      estadosPago: event.nuevosEstados,
+      servicios: estadoActual.servicios,
+      tiposPrenda: estadoActual.tiposPrenda,
+    ));
+  }
+
+  void _onActualizarServicios(ActualizarServicios event, Emitter<CrearNotaState> emit) {
+    final estadoActual = state as CrearNotaInicial;
+    emit(CrearNotaInicial(
+      estadosNota: estadoActual.estadosNota,
+      estadosPago: estadoActual.estadosPago,
+      servicios: event.nuevosServicios,
+      tiposPrenda: estadoActual.tiposPrenda,
+    ));
+  }
+
+  void _onActualizarTiposPrenda(ActualizarTiposPrenda event, Emitter<CrearNotaState> emit) {
+    final estadoActual = state as CrearNotaInicial;
+    emit(CrearNotaInicial(
+      estadosNota: estadoActual.estadosNota,
+      estadosPago: estadoActual.estadosPago,
+      servicios: estadoActual.servicios,
+      tiposPrenda: event.nuevosTiposPrenda,
+    ));
   }
 }

@@ -29,9 +29,21 @@ class _CrearNotaState extends State<CrearNota> {
   String? _servicioSeleccionado;
 
   int _cantidadPrendas = 0;
-
-
   List<Map<String, dynamic>> _prendas = [];
+
+  void _limpiarFormulario() {
+    _nombreController.clear();
+    _telefonoController.clear();
+    _observacionesController.clear();
+    _estadoPagoController.clear();
+    _abonoController.clear();
+    _importeTotalController.clear();
+    _precioUnitarioController.clear();
+    _tipoPrendaSeleccionada = null;
+    _servicioSeleccionado = null;
+    _cantidadPrendas = 0;
+    _prendas.clear();
+  }
 
   Future<void> _mostrarDatePicker(BuildContext context) async {
     DateTime fechaMinima = DateTime.now().subtract(Duration(days: 60));
@@ -45,7 +57,7 @@ class _CrearNotaState extends State<CrearNota> {
           width: 300,
           child: SfDateRangePicker(
             selectionMode: DateRangePickerSelectionMode.range,
-            minDate: fechaMinima, // Establece la fecha mínima
+            minDate: fechaMinima, 
             onSelectionChanged: (args) {
               if (args.value is PickerDateRange) {
                 setState(() {
@@ -68,75 +80,75 @@ class _CrearNotaState extends State<CrearNota> {
     );
   }
 
-void _agregarPrenda() {
-  // Validar que los campos de la nota estén llenos
-  if (_nombreController.text.trim().isEmpty ||
-      _telefonoController.text.trim().isEmpty ||
-      _fechaInicio == null ||
-      _fechaFin == null) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Por favor, complete todos los campos principales de la nota antes de agregar una prenda')),
-    );
-    return; // Salir del método si no se cumplen los requisitos
-  }
+  void _agregarPrenda() {
+    // Validar que los campos de la nota estén llenos
+    if (_nombreController.text.trim().isEmpty ||
+        _telefonoController.text.trim().isEmpty ||
+        _fechaInicio == null ||
+        _fechaFin == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Por favor, complete todos los campos principales de la nota antes de agregar una prenda')),
+      );
+      return;
+    }
 
-  // Validar que los campos de la prenda estén completos
-  double precioUnitario = double.tryParse(_precioUnitarioController.text) ?? 0.0;
-  if (_tipoPrendaSeleccionada != null && 
-      _cantidadPrendas > 0 && 
-      _servicioSeleccionado != null && 
-      precioUnitario > 0.0) {
-    setState(() {
-      double subtotal = precioUnitario * _cantidadPrendas;
-      _prendas.add({
-        'tipo': _tipoPrendaSeleccionada,
-        'servicio': _servicioSeleccionado,
-        'precioUnitario': precioUnitario,
-        'cantidad': _cantidadPrendas,
-        'subtotal': subtotal,
+    // Validar que los campos de la prenda estén completos
+    double precioUnitario = double.tryParse(_precioUnitarioController.text) ?? 0.0;
+    if (_tipoPrendaSeleccionada != null &&
+        _cantidadPrendas > 0 &&
+        _servicioSeleccionado != null &&
+        precioUnitario > 0.0) {
+      setState(() {
+        double subtotal = precioUnitario * _cantidadPrendas;
+        _prendas.add({
+          'tipo': _tipoPrendaSeleccionada,
+          'servicio': _servicioSeleccionado,
+          'precioUnitario': precioUnitario,
+          'cantidad': _cantidadPrendas,
+        });
+
+        // Actualizar el importe total
+        double importeTotalActual = double.tryParse(_importeTotalController.text) ?? 0.0;
+        _importeTotalController.text = (importeTotalActual + subtotal).toStringAsFixed(2);
+
+        // Vaciar los campos de prenda después de agregarla
+        _tipoPrendaSeleccionada = null;
+        _servicioSeleccionado = null;
+        _cantidadPrendas = 0;
+        _precioUnitarioController.clear();
       });
-
-      // Actualizar el importe total
-      double importeTotalActual = double.tryParse(_importeTotalController.text) ?? 0.0;
-      _importeTotalController.text = (importeTotalActual + subtotal).toStringAsFixed(2);
-
-      // Vaciar los campos de prenda después de agregarla
-      _tipoPrendaSeleccionada = null;
-      _servicioSeleccionado = null;
-      _cantidadPrendas = 0;
-      _precioUnitarioController.clear();
-    });
-  } else {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Por favor, complete todos los campos de la prenda')),
-    );
-  }
-}
-
-void _crearNota() {
-  if (_fechaInicio == null || _fechaFin == null) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Debe seleccionar un rango de fechas')),
-    );
-    return;
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Por favor, complete todos los campos de la prenda')),
+      );
+    }
   }
 
-  final Map<String, dynamic> nota = {
-    'nombreCliente': _nombreController.text,
-    'telefonoCliente': _telefonoController.text,
-    'fechaRecibido': _fechaInicio,
-    'fechaEstimada': _fechaFin,
-    'importe': double.tryParse(_importeTotalController.text) ?? 0.0,
-    'estadoPago': _estadoPagoController.text,
-    'prioridad': 1, // Puedes obtener esta información de alguna parte o input
-    'observaciones': _observacionesController.text,
-    'estado': _estadoNota, // Estado de la nota
-  };
+  void _crearNota() {
+    // Validar que todos los campos estén completos antes de crear la nota
+    if (_fechaInicio == null || _fechaFin == null || _nombreController.text.trim().isEmpty || _telefonoController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Por favor, complete todos los campos antes de crear la nota')),
+      );
+      return;
+    }
 
-  final List<Map<String, dynamic>> prendas = []; // Aquí puedes llenar la lista de prendas
+    final Map<String, dynamic> nota = {
+      'nombreCliente': _nombreController.text,
+      'telefonoCliente': _telefonoController.text,
+      'fechaRecibido': _fechaInicio,
+      'fechaEstimada': _fechaFin,
+      'importe': double.tryParse(_importeTotalController.text) ?? 0.0,
+      'estadoPago': _estadoPagoController.text,
+      'prioridad': 1, // Puedes obtener esta información de alguna parte o input
+      'observaciones': _observacionesController.text,
+      'estado': _estadoNota, // Estado de la nota
+    };
 
-  context.read<CrearNotaBloc>().add(EnviarFormulario(nota: nota, prendas: prendas));
-}
+    final List<Map<String, dynamic>> prendas = _prendas;
+
+    context.read<CrearNotaBloc>().add(EnviarFormulario(nota: nota, prendas: prendas));
+  }
 
 
   @override
@@ -467,27 +479,33 @@ if (_prendas.isNotEmpty)
     child: SingleChildScrollView(
       scrollDirection: Axis.vertical,
       child: DataTable(
-        columns: const [
-          DataColumn(label: Text('Tipo')),
-          DataColumn(label: Text('Servicio')),
-          DataColumn(label: Text('Cantidad')),
-          DataColumn(label: Text('Precio Unitario')),
-          DataColumn(label: Text('Subtotal')),
+  columns: const [
+    DataColumn(label: Text('Tipo')),
+    DataColumn(label: Text('Servicio')),
+    DataColumn(label: Text('Cantidad')),
+    DataColumn(label: Text('Precio Unitario')),
+    DataColumn(label: Text('Subtotal')),
+  ],
+  rows: _prendas.map(
+    (prenda) {
+      // Calculamos el subtotal solo si existen valores válidos
+      double subtotal = prenda['precioUnitario'] != null && prenda['cantidad'] != null
+          ? prenda['precioUnitario'] * prenda['cantidad']
+          : 0.0;  // Si no existe el valor, lo tratamos como 0
+
+      return DataRow(
+        cells: [
+          DataCell(Text(prenda['tipo'] ?? '')),
+          DataCell(Text(prenda['servicio'] ?? '')),
+          DataCell(Text(prenda['cantidad'].toString())),
+          DataCell(Text(prenda['precioUnitario'].toStringAsFixed(2))),
+          DataCell(Text(subtotal.toStringAsFixed(2))), // Usamos el valor calculado
         ],
-        rows: _prendas
-            .map(
-              (prenda) => DataRow(
-                cells: [
-                  DataCell(Text(prenda['tipo'] ?? '')),
-                  DataCell(Text(prenda['servicio'] ?? '')),
-                  DataCell(Text(prenda['cantidad'].toString())),
-                  DataCell(Text(prenda['precioUnitario'].toStringAsFixed(2))),
-                  DataCell(Text(prenda['subtotal'].toStringAsFixed(2))),
-                ],
-              ),
-            )
-            .toList(),
-      ),
+      );
+    },
+  ).toList(),
+)
+
     ),
   ),
 
