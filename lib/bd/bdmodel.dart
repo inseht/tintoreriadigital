@@ -11,12 +11,12 @@ class BdModel {
 
     var db = await databaseFactory.openDatabase(path);
 
-      await db.execute('PRAGMA foreign_keys = ON');
-      
+    await db.execute('PRAGMA foreign_keys = ON');
+    
     try {
-      await db.execute('''
+      await db.execute(''' 
         CREATE TABLE IF NOT EXISTS Notas (
-          idNota INTEGER NOT NULL PRIMARY KEY,
+          idNota INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
           nombreCliente TEXT NOT NULL,
           telefonoCliente TEXT NOT NULL,
           fechaRecibido DATE NOT NULL,
@@ -30,32 +30,22 @@ class BdModel {
         )
       ''');
 
-await db.execute('''
-  CREATE TABLE IF NOT EXISTS Prendas (
-    idPrenda INTEGER NOT NULL PRIMARY KEY,
-    tipo TEXT NOT NULL,
-    servicio TEXT NOT NULL,
-    precioUnitario INTEGER NOT NULL,
-    cantidad INTEGER NOT NULL,
-    idNota INTEGER NOT NULL,
-    FOREIGN KEY (idNota) REFERENCES Notas(idNota) ON DELETE CASCADE
-  )
-''');
-
-
-      await db.execute('''
-        CREATE TABLE IF NOT EXISTS NotaPrenda (
-          idNotaPrenda INTEGER NOT NULL PRIMARY KEY,
+      await db.execute(''' 
+        CREATE TABLE IF NOT EXISTS Prendas (
+          idPrenda INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+          tipo TEXT NOT NULL,
+          servicio TEXT NOT NULL,
+          precioUnitario FLOAT NOT NULL, 
+          cantidad INTEGER NOT NULL,
+          color TEXT NOT NULL,
           idNota INTEGER NOT NULL,
-          idPrenda INTEGER NOT NULL,
-          FOREIGN KEY (idNota) REFERENCES Notas(idNota),
-          FOREIGN KEY (idPrenda) REFERENCES Prendas(idPrenda)
+          FOREIGN KEY (idNota) REFERENCES Notas(idNota) ON DELETE CASCADE
         )
       ''');
 
-      await db.execute('''
+      await db.execute(''' 
         CREATE TABLE IF NOT EXISTS Proveedores (
-          idProveedor INTEGER NOT NULL PRIMARY KEY,
+          idProveedor INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
           nombreProveedor TEXT NOT NULL,
           razonProveedor TEXT,
           contactoProveedor1 TEXT NOT NULL,
@@ -66,97 +56,66 @@ await db.execute('''
     } catch (e) {
       print('Error al inicializar la base de datos: $e');
     }
+
     return db;
   }
 
-static Future<void> crearNotaConPrendas(Map<String, dynamic> nota, List<Map<String, dynamic>> prendas) async {
-  final db = await inicializarBD();
-  final dateFormat = DateFormat('dd/MM/yyyy');
-
-  try {
-    final notaConFechas = {
-      ...nota,
-      'fechaRecibido': dateFormat.format(nota['fechaRecibido']),
-      'fechaEstimada': dateFormat.format(nota['fechaEstimada']),
-    };
-
-    int idNota = await db.insert('Notas', notaConFechas);
-
-    for (var prenda in prendas) {
-      int idPrenda = await db.insert('Prendas', prenda);
-
-      await db.insert('NotaPrenda', {
-        'idNota': idNota,
-        'idPrenda': idPrenda,
-      });
-    }
-  } catch (e) {
-    print('Error al crear la nota con prendas: $e');
-  } finally {
-    await db.close();
-  }
-}
-
-
-  static Future<List<Map<String, dynamic>>> obtenerNotasConPrendas() async {
+  static Future<void> crearNotaConPrendas(Map<String, dynamic> nota, List<Map<String, dynamic>> prendas) async {
     final db = await inicializarBD();
-    
+    final dateFormat = DateFormat('dd/MM/yyyy');
+
     try {
-      final notas = await db.query('Notas');
-      List<Map<String, dynamic>> resultado = [];
+      final notaConFechas = {
+        ...nota,
+        'fechaRecibido': dateFormat.format(nota['fechaRecibido']),
+        'fechaEstimada': dateFormat.format(nota['fechaEstimada']),
+      };
 
-      for (var nota in notas) {
-        final notaPrendas = await db.query(
-          'NotaPrenda',
-          where: 'idNota = ?',
-          whereArgs: [nota['idNota']],
-        );
+      // Insertar la nota
+      int idNota = await db.insert('Notas', notaConFechas);
 
-        List<Map<String, dynamic>> prendas = [];
-        for (var notaPrenda in notaPrendas) {
-          final prenda = await db.query(
-            'Prendas',
-            where: 'idPrenda = ?',
-            whereArgs: [notaPrenda['idPrenda']],
-          );
-          prendas.add(prenda.first);
-        }
-
-        resultado.add({
-          'nota': nota,
-          'prendas': prendas,
-        });
+      // Insertar las prendas y vincularlas directamente con la nota
+      for (var prenda in prendas) {
+        prenda['idNota'] = idNota;  // Relacionar la prenda con la nota
+        await db.insert('Prendas', prenda); // Insertar la prenda con idNota
       }
-      return resultado;
     } catch (e) {
-      print('Error al obtener notas con prendas: $e');
-      return [];
+      print('Error al crear la nota con prendas: $e');
     } finally {
       await db.close();
     }
   }
 
-static Future<List<Map<String, dynamic>>> obtenerPrendas() async {
-  final db = await inicializarBD();
-  final List<Map<String, dynamic>> prendas = await db.query('Prendas');
-  await db.close();
-  return prendas;
-}
+  static Future<List<Map<String, dynamic>>> obtenerNotasConPrendas() async {
+    final db = await inicializarBD();
+    final result = await db.rawQuery('''
+      SELECT * FROM Notas 
+      LEFT JOIN Prendas ON Notas.idNota = Prendas.idNota
+    ''');
+    await db.close();
+    return result;
+  }
 
+  static Future<List<Map<String, dynamic>>> obtenerPrendas() async {
+    final db = await inicializarBD();
+    final List<Map<String, dynamic>> prendas = await db.query('Prendas');
+    await db.close();
+    return prendas;
+  }
 
   static Future<List<Map<String, dynamic>>> obtenerNotas() async {
     final db = await inicializarBD();
     final List<Map<String, dynamic>> notas = await db.query('Notas');
-  final dateFormat = DateFormat('dd/MM/yyyy');
-  final List<Map<String, dynamic>> notasConFechas = notas.map((nota) {
-    return {
-      ...nota,
-      'fechaRecibido': dateFormat.parse(nota['fechaRecibido'] as String),
-      'fechaEstimada': dateFormat.parse(nota['fechaEstimada'] as String),
-    };
-  }).toList();
+    final dateFormat = DateFormat('dd/MM/yyyy');
+    final List<Map<String, dynamic>> notasConFechas = notas.map((nota) {
+      return {
+        ...nota,
+        'fechaRecibido': dateFormat.parse(nota['fechaRecibido'] as String),
+        'fechaEstimada': dateFormat.parse(nota['fechaEstimada'] as String),
+      };
+    }).toList();
     await db.close();
-    return notas;
+    return notasConFechas;
   }
 
   static Future<Map<String, List<Map<String, dynamic>>>> obtenerDatosDeTodasLasTablas() async {
@@ -164,14 +123,12 @@ static Future<List<Map<String, dynamic>>> obtenerPrendas() async {
     final proveedores = await db.query('Proveedores');
     final prendas = await db.query('Prendas');
     final notas = await db.query('Notas');
-    final notaPrenda = await db.query('NotaPrenda');
     await db.close();
 
     return {
       'Proveedores': proveedores,
       'Prendas': prendas,
       'Notas': notas,
-      'NotaPrenda': notaPrenda,
     };
   }
 
@@ -225,24 +182,24 @@ static Future<List<Map<String, dynamic>>> obtenerPrendas() async {
     }
   }
 
-static Future<Map<DateTime, List<Map<String, dynamic>>>> fetchEventos() async {
-  final List<Map<String, dynamic>> notas = await obtenerNotas();
+  static Future<Map<DateTime, List<Map<String, dynamic>>>> fetchEventos() async {
+    final List<Map<String, dynamic>> notas = await obtenerNotas();
 
-  final Map<DateTime, List<Map<String, dynamic>>> eventos = {};
+    final Map<DateTime, List<Map<String, dynamic>>> eventos = {};
 
-  for (final nota in notas) {
-    final fechaRecibido = nota['fechaRecibido'] as DateTime;
+    for (final nota in notas) {
+      final fechaRecibido = nota['fechaRecibido'] as DateTime;
 
-    if (eventos[fechaRecibido] == null) {
-      eventos[fechaRecibido] = [];
+      if (eventos[fechaRecibido] == null) {
+        eventos[fechaRecibido] = [];
+      }
+      eventos[fechaRecibido]!.add(nota);
     }
-    eventos[fechaRecibido]!.add(nota);
+
+    return eventos;
   }
 
-  return eventos;
-}
-
-static Future<void> agregarPrenda(Map<String, dynamic> prenda) async {
+  static Future<void> agregarPrenda(Map<String, dynamic> prenda) async {
     final db = await inicializarBD();
     try {
       await db.insert('Prendas', prenda);
@@ -254,10 +211,19 @@ static Future<void> agregarPrenda(Map<String, dynamic> prenda) async {
     }
   }
 
+  static Future<void> eliminarNota(int idNota) async {
+    final db = await inicializarBD();
+    await db.delete('Prendas', where: 'idNota = ?', whereArgs: [idNota]);  // Elimina prendas asociadas
+    await db.delete('Notas', where: 'idNota = ?', whereArgs: [idNota]);  // Elimina la nota
+  }
 
+  static Future<void> actualizarNota(int idNota, Map<String, dynamic> nuevaNota) async {
+    final db = await inicializarBD();
+    await db.update('Notas', nuevaNota, where: 'idNota = ?', whereArgs: [idNota]);
+  }
 
+  static Future<void> actualizarPrenda(int idPrenda, Map<String, dynamic> nuevaPrenda) async {
+    final db = await inicializarBD();
+    await db.update('Prendas', nuevaPrenda, where: 'idPrenda = ?', whereArgs: [idPrenda]);
+  }
 }
-
-
-
-

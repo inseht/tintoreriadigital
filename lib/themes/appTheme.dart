@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class AppTheme {
   static final ThemeData lightTheme = ThemeData(
@@ -33,14 +34,16 @@ class AppTheme {
         ),
       ),
     ),
-    textTheme: const TextTheme(
-      bodyMedium: TextStyle(
-        fontSize: 30,
-        color: Color.fromRGBO(96, 118, 124, 1),
-      ),
-      titleLarge: TextStyle(
-        fontSize: 30,
-        color: Color.fromRGBO(96, 118, 124, 1),
+    textTheme: GoogleFonts.montserratTextTheme(
+      const TextTheme(
+        bodyMedium: TextStyle(
+          fontSize: 30,
+          color: Color.fromRGBO(96, 118, 124, 1),
+        ),
+        titleLarge: TextStyle(
+          fontSize: 30,
+          color: Color.fromRGBO(96, 118, 124, 1),
+        ),
       ),
     ),
   );
@@ -77,14 +80,16 @@ class AppTheme {
         ),
       ),
     ),
-    textTheme: const TextTheme(
-      bodyMedium: TextStyle(
-        fontSize: 30,
-        color: Color.fromRGBO(226, 244, 250, 1),
-      ),
-      titleLarge: TextStyle(
-        fontSize: 30,
-        color: Color.fromRGBO(226, 244, 250, 1),
+    textTheme: GoogleFonts.montserratTextTheme(
+      const TextTheme(
+        bodyMedium: TextStyle(
+          fontSize: 30,
+          color: Color.fromRGBO(226, 244, 250, 1),
+        ),
+        titleLarge: TextStyle(
+          fontSize: 30,
+          color: Color.fromRGBO(226, 244, 250, 1),
+        ),
       ),
     ),
   );

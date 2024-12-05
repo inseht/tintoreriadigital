@@ -8,13 +8,15 @@ class CrearNotaInicial extends CrearNotaState {
   final List<String> estadosNota;
   final List<String> estadosPago;
   final List<String> servicios;
+  final List<String> colores;
   final List<String> tiposPrenda;
 
   CrearNotaInicial({
     this.estadosNota = const ['Recibido', 'En proceso', 'Finalizado'],
     this.estadosPago = const ['Pendiente', 'Pagado', 'Abonado'],
     this.servicios = const ['Tintorería', 'Sastrería', 'Ambos', 'Otro'],
-    this.tiposPrenda = const ['Saco', 'Camisa', 'Pantalon', 'Vestido', 'Sueter', 'Traje' , 'Colcha', 'Cortina', 'Blusa', 'Otro'],
+    this.colores = const ['Rojo', 'Verde', 'Azul', 'Negro', 'Marrón', 'Amarillo', 'Blanco', 'Gris', 'Otro'],
+    this.tiposPrenda = const ['Saco', 'Camisa', 'Pantalon', 'Vestido', 'Sueter', 'Traje', 'Colcha', 'Cortina', 'Blusa', 'Otro'],
   });
 }
 
@@ -75,30 +77,26 @@ class EnviarFormulario extends CrearNotaEvent {
   EnviarFormulario({required this.nota, required this.prendas});
 }
 
-
 class CrearPrendaSubmitted extends CrearNotaEvent {
   final Map<String, dynamic> prenda;
   CrearPrendaSubmitted(this.prenda);
 }
 
-class ActualizarEstadosNota extends CrearNotaEvent {
-  final List<String> nuevosEstados;
-  ActualizarEstadosNota(this.nuevosEstados);
+class EliminarNota extends CrearNotaEvent {
+  final int idNota;
+  EliminarNota(this.idNota);
 }
 
-class ActualizarEstadosPago extends CrearNotaEvent {
-  final List<String> nuevosEstados;
-  ActualizarEstadosPago(this.nuevosEstados);
+class ActualizarNota extends CrearNotaEvent {
+  final int idNota;
+  final Map<String, dynamic> nuevaNota;
+  ActualizarNota({required this.idNota, required this.nuevaNota});
 }
 
-class ActualizarServicios extends CrearNotaEvent {
-  final List<String> nuevosServicios;
-  ActualizarServicios(this.nuevosServicios);
-}
-
-class ActualizarTiposPrenda extends CrearNotaEvent {
-  final List<String> nuevosTiposPrenda;
-  ActualizarTiposPrenda(this.nuevosTiposPrenda);
+class ActualizarPrenda extends CrearNotaEvent {
+  final int idPrenda;
+  final Map<String, dynamic> nuevaPrenda;
+  ActualizarPrenda({required this.idPrenda, required this.nuevaPrenda});
 }
 
 class CargarNotasConPrendas extends CrearNotaEvent {}
@@ -109,16 +107,19 @@ class CrearNotaBloc extends Bloc<CrearNotaEvent, CrearNotaState> {
     on<ValidarFormulario>(_onValidarFormulario);
     on<EnviarFormulario>(_onEnviarFormulario);
     on<CrearPrendaSubmitted>(_onCrearPrendaSubmitted);
+    on<EliminarNota>(_onEliminarNota);
+    on<ActualizarNota>(_onActualizarNota);
+    on<ActualizarPrenda>(_onActualizarPrenda);
     on<CargarNotasConPrendas>(_onCargarNotasConPrendas);
-    on<ActualizarEstadosNota>(_onActualizarEstadosNota);
-    on<ActualizarEstadosPago>(_onActualizarEstadosPago);
-    on<ActualizarServicios>(_onActualizarServicios);
-    on<ActualizarTiposPrenda>(_onActualizarTiposPrenda);
   }
 
   void _onValidarFormulario(ValidarFormulario event, Emitter<CrearNotaState> emit) {
     if (event.nombreCliente.isEmpty || event.telefonoCliente.isEmpty) {
-      emit(FormularioInvalido('El nombre y teléfono son requeridos'));
+      emit(FormularioInvalido('El nombre y teléfono son requeridos.'));
+    } else if (!RegExp(r'^\d+$').hasMatch(event.telefonoCliente)) {
+      emit(FormularioInvalido('El teléfono debe contener sólo números.'));
+    } else if (DateTime.parse(event.fechaEstimada).isBefore(DateTime.parse(event.fechaRecibido))) {
+      emit(FormularioInvalido('La fecha estimada no puede ser anterior a la fecha recibida.'));
     } else {
       emit(FormularioValido());
     }
@@ -144,6 +145,33 @@ class CrearNotaBloc extends Bloc<CrearNotaEvent, CrearNotaState> {
     }
   }
 
+  Future<void> _onEliminarNota(EliminarNota event, Emitter<CrearNotaState> emit) async {
+    try {
+      await BdModel.eliminarNota(event.idNota);
+      emit(FormularioEnviado());  // Aquí puedes emitir un estado de éxito o hacer algo para actualizar la vista
+    } catch (e) {
+      emit(FormularioInvalido('Error al eliminar la nota: $e'));
+    }
+  }
+
+  Future<void> _onActualizarNota(ActualizarNota event, Emitter<CrearNotaState> emit) async {
+    try {
+      await BdModel.actualizarNota(event.idNota, event.nuevaNota);
+      emit(FormularioEnviado());
+    } catch (e) {
+      emit(FormularioInvalido('Error al actualizar la nota: $e'));
+    }
+  }
+
+  Future<void> _onActualizarPrenda(ActualizarPrenda event, Emitter<CrearNotaState> emit) async {
+    try {
+      await BdModel.actualizarPrenda(event.idPrenda, event.nuevaPrenda);
+      emit(CrearPrendaSuccess());
+    } catch (e) {
+      emit(CrearPrendaFailure('Error al actualizar la prenda: $e'));
+    }
+  }
+
   Future<void> _onCargarNotasConPrendas(CargarNotasConPrendas event, Emitter<CrearNotaState> emit) async {
     try {
       final datos = await BdModel.obtenerNotasConPrendas();
@@ -151,45 +179,5 @@ class CrearNotaBloc extends Bloc<CrearNotaEvent, CrearNotaState> {
     } catch (e) {
       emit(FormularioInvalido('Error al cargar notas: $e'));
     }
-  }
-
-  void _onActualizarEstadosNota(ActualizarEstadosNota event, Emitter<CrearNotaState> emit) {
-    final estadoActual = state as CrearNotaInicial;
-    emit(CrearNotaInicial(
-      estadosNota: event.nuevosEstados,
-      estadosPago: estadoActual.estadosPago,
-      servicios: estadoActual.servicios,
-      tiposPrenda: estadoActual.tiposPrenda,
-    ));
-  }
-
-  void _onActualizarEstadosPago(ActualizarEstadosPago event, Emitter<CrearNotaState> emit) {
-    final estadoActual = state as CrearNotaInicial;
-    emit(CrearNotaInicial(
-      estadosNota: estadoActual.estadosNota,
-      estadosPago: event.nuevosEstados,
-      servicios: estadoActual.servicios,
-      tiposPrenda: estadoActual.tiposPrenda,
-    ));
-  }
-
-  void _onActualizarServicios(ActualizarServicios event, Emitter<CrearNotaState> emit) {
-    final estadoActual = state as CrearNotaInicial;
-    emit(CrearNotaInicial(
-      estadosNota: estadoActual.estadosNota,
-      estadosPago: estadoActual.estadosPago,
-      servicios: event.nuevosServicios,
-      tiposPrenda: estadoActual.tiposPrenda,
-    ));
-  }
-
-  void _onActualizarTiposPrenda(ActualizarTiposPrenda event, Emitter<CrearNotaState> emit) {
-    final estadoActual = state as CrearNotaInicial;
-    emit(CrearNotaInicial(
-      estadosNota: estadoActual.estadosNota,
-      estadosPago: estadoActual.estadosPago,
-      servicios: estadoActual.servicios,
-      tiposPrenda: event.nuevosTiposPrenda,
-    ));
   }
 }

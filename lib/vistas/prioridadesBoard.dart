@@ -109,39 +109,42 @@ class _PrioridadesBoardState extends State<prioridadesBoard> {
     throw UnimplementedError();
   }
 
-  Widget _buildNotaCard(SimpleItem item) {
-    return Card(
-      margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-      elevation: 4,
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              item.title,
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              item.subtitle,
-              style: const TextStyle(fontSize: 14, color: Colors.grey),
-            ),
-            const SizedBox(height: 12),
-            // Aquí puedes agregar detalles adicionales si es necesario
-            Text(
-              'Detalles de la Nota:',
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 8),
-            Text('Observaciones: ${item.notas['observaciones'] ?? 'N/A'}'),
-            Text('Abono: ${item.notas['abono']}'),
-            // Si deseas mostrar las prendas asociadas, puedes iterar sobre ellas aquí
-          ],
-        ),
+Widget _buildNotaCard(SimpleItem item) {
+  final prendas = item.notas['prendas'] as List<Map<String, dynamic>>?;
+
+  return Card(
+    margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+    elevation: 4,
+    child: Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            item.title,
+            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            item.subtitle,
+            style: const TextStyle(fontSize: 14, color: Colors.grey),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            'Prendas asociadas:',
+            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 8),
+          if (prendas != null && prendas.isNotEmpty)
+            ...prendas.map((prenda) => Text('- ${prenda['tipo']} (${prenda['servicio']} - ${prenda['color']})')).toList()
+          else
+            const Text('No hay prendas asociadas.'),
+        ],
       ),
-    );
-  }
+    ),
+  );
+}
+
 }
 
 class SimpleItem extends AppFlowyGroupItem {
