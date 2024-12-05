@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:syncfusion_flutter_datepicker/datepicker.dart';
 import 'package:intl/intl.dart';
+import 'package:tintoreriadigital/bd/bdmodel.dart';
 import 'package:tintoreriadigital/bloc/crearNotaBloc.dart';
 import 'package:roundcheckbox/roundcheckbox.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 class CrearNota extends StatefulWidget {
-  const CrearNota({super.key});
+  final Map<String, dynamic>? nota;
+
+  const CrearNota({Key? key, this.nota}) : super(key: key);
 
   @override
   State<CrearNota> createState() => _CrearNotaState();
@@ -25,28 +28,36 @@ class _CrearNotaState extends State<CrearNota> {
   DateTime? _fechaInicio;
   DateTime? _fechaFin;
   String? _tipoPrendaSeleccionada;
-  String? _EstadoPagoNota = 'Pendiente';
-  String? _estadoNota = 'Recibido';
+  String? _estadoPagoNota = 'Pendiente';
+  String? _estadoNota = 'Recibido'; 
   String? _servicioSeleccionado;
-    String? _color;
+  String? _color;
 
-  int _cantidadPrendas = 0;
+  int _cantidadPrendas = 1;
   List<Map<String, dynamic>> _prendas = [];
 
-  void _limpiarFormulario() {
-    _nombreController.clear();
-    _telefonoController.clear();
-    _observacionesController.clear();
-    _estadoPagoController.clear();
-    _abonoController.clear();
-    _importeTotalController.clear();
-    _precioUnitarioController.clear();
-    _colorController.clear();
+void _limpiarFormulario() {
+  _nombreController.clear();
+  _telefonoController.clear();
+  _observacionesController.clear();
+  _estadoPagoController.clear();
+  _abonoController.clear();
+  _importeTotalController.clear();
+  _precioUnitarioController.clear();
+  _colorController.clear();
+  
+  setState(() {
     _tipoPrendaSeleccionada = null;
     _servicioSeleccionado = null;
-    _cantidadPrendas = 0;
-    _prendas.clear();
-  }
+    _estadoPagoNota = 'Pendiente';
+    _estadoNota = 'Recibido';
+    _cantidadPrendas = 1;
+    _prendas.clear(); 
+    _fechaInicio = null; 
+    _fechaFin = null; 
+  });
+}
+
 
   Future<void> _mostrarDatePicker(BuildContext context) async {
     DateTime fechaMinima = DateTime.now().subtract(Duration(days: 60));
@@ -95,28 +106,26 @@ void _agregarPrenda() {
   }
 
   double precioUnitario = double.tryParse(_precioUnitarioController.text) ?? 0.0;
+
   if (_tipoPrendaSeleccionada != null && 
       _cantidadPrendas > 0 && 
       _servicioSeleccionado != null && 
       precioUnitario > 0.0) {
     setState(() {
-      double subtotal = precioUnitario * _cantidadPrendas;
       _prendas.add({
         'tipo': _tipoPrendaSeleccionada,
         'servicio': _servicioSeleccionado,
         'precioUnitario': precioUnitario,
         'colores': _color,
         'cantidad': _cantidadPrendas,
-        'subtotal': subtotal, // Agregar subtotal de la prenda
       });
 
       double importeTotalActual = double.tryParse(_importeTotalController.text) ?? 0.0;
-      _importeTotalController.text = (importeTotalActual + subtotal).toStringAsFixed(2);
+      _importeTotalController.text = (importeTotalActual + precioUnitario * _cantidadPrendas).toStringAsFixed(2);
 
-      // Limpiar campos de prenda después de agregarla
       _tipoPrendaSeleccionada = null;
       _servicioSeleccionado = null;
-      _cantidadPrendas = 0;
+      _cantidadPrendas = 1; 
       _precioUnitarioController.clear();
     });
   } else {
@@ -135,13 +144,25 @@ void _crearNota() {
     return;
   }
 
+  if (_prendas.isEmpty) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Debe agregar al menos una prenda antes de guardar la nota')),
+    );
+    return;
+  }
+
+  // Solo recalcula el importe si el estado no es "Pagado"
+  double importeFinal = (_estadoPagoNota == 'Pagado')
+      ? double.tryParse(_importeTotalController.text) ?? 0.0
+      : _prendas.fold<double>(0.0, (sum, prenda) => sum + (prenda['subtotal'] ?? 0.0));
+
   final Map<String, dynamic> nota = {
     'nombreCliente': _nombreController.text,
     'telefonoCliente': _telefonoController.text,
     'fechaRecibido': _fechaInicio,
     'fechaEstimada': _fechaFin,
-    'importe': double.tryParse(_importeTotalController.text) ?? 0.0,
-    'estadoPago': _estadoPagoController.text,
+    'importe': importeFinal,
+    'estadoPago': _estadoPagoNota,
     'prioridad': 1,
     'observaciones': _observacionesController.text,
     'estado': _estadoNota,
@@ -149,17 +170,23 @@ void _crearNota() {
 
   context.read<CrearNotaBloc>().add(EnviarFormulario(nota: nota, prendas: _prendas));
 
+  // Limpia el formulario
   _limpiarFormulario();
 }
 
+
+
 void _eliminarPrenda(int index) {
   setState(() {
-    double subtotal = _prendas[index]['subtotal'];
+    double precioUnitario = _prendas[index]['precioUnitario'];
+    int cantidad = _prendas[index]['cantidad'];
+    double importeParcial = precioUnitario * cantidad;
+
     _prendas.removeAt(index);
 
     // Recalcular el importe total después de eliminar la prenda
-    double nuevoTotal = _prendas.fold<double>(0.0, (sum, prenda) => sum + (prenda['subtotal'] ?? 0.0));
-    _importeTotalController.text = nuevoTotal.toStringAsFixed(2);
+    double nuevoTotal = double.tryParse(_importeTotalController.text) ?? 0.0;
+    _importeTotalController.text = (nuevoTotal - importeParcial).toStringAsFixed(2);
   });
 }
 
@@ -176,7 +203,6 @@ void _eliminarPrenda(int index) {
               padding: const EdgeInsets.all(16.0),
               child: Row(
                 children: <Widget>[
-                  // Card de Información General
                   Expanded(
                     child: Card(
                       child: Padding(
@@ -246,32 +272,25 @@ BlocBuilder<CrearNotaBloc, CrearNotaState>(
   builder: (context, state) {
     if (state is CrearNotaInicial) {
       return DropdownButtonFormField<String>(
-        value: _EstadoPagoNota,
-        items: state.estadosPago.toSet().toList().map((estado) => DropdownMenuItem<String>(
-          value: estado,
-          child: Text(estado),
-        )).toList(),
-        onChanged: _prendas.isNotEmpty ? (value) {
+        value: _estadoNota,
+        items: state.estadosNota
+            .map((estado) => DropdownMenuItem<String>(
+                  value: estado,
+                  child: Text(estado),
+                ))
+            .toList(),
+        onChanged: (value) {
           setState(() {
-            _EstadoPagoNota = value;
-            if (value == 'Pagado') {
-              _abonoController.clear();
-              _importeTotalController.text = '0.00';
-            } else if (value == 'No pagado') {
-              _abonoController.clear();
-              double total = _prendas.fold<double>(0.0, (sum, prenda) => sum + (prenda['subtotal'] ?? 0.0));
-              _importeTotalController.text = total.toStringAsFixed(2);
-            }
+            _estadoNota = value!;
           });
-        } : null,
-        decoration: InputDecoration(
+        },
+        decoration: const InputDecoration(
           border: OutlineInputBorder(),
-          labelText: 'Estado de pago',
-          hintText: _prendas.isEmpty ? 'Agregue prendas primero' : null,
+          labelText: 'Estado de la Nota',
         ),
       );
     }
-    return CircularProgressIndicator();
+    return const CircularProgressIndicator();
   },
 ),
 
@@ -283,26 +302,22 @@ BlocBuilder<CrearNotaBloc, CrearNotaState>(
   builder: (context, state) {
     if (state is CrearNotaInicial) {
       return DropdownButtonFormField<String>(
-        value: _EstadoPagoNota,
-items: state.estadosPago.toSet().toList().map((estado) => DropdownMenuItem<String>(
-      value: estado,
-      child: Text(estado),
-    )).toList(),
-
-onChanged: _prendas.isNotEmpty ? (value) {
-  setState(() {
-    _EstadoPagoNota = value;
-    if (value == 'Pagado') {
-      _abonoController.clear();
-      _importeTotalController.text = '0.00';
-    } else if (value == 'No pagado') {
-      _abonoController.clear();
-      double total = _prendas.fold<double>(0.0, (sum, prenda) => sum + (prenda['subtotal'] ?? 0.0));
-      _importeTotalController.text = total.toStringAsFixed(2);
-    }
-  });
-} : null,
-
+        value: state.estadosPago.contains(_estadoPagoNota) ? _estadoPagoNota : null,
+        items: state.estadosPago.map((estado) {
+          return DropdownMenuItem<String>(
+            value: estado,
+            child: Text(estado),
+          );
+        }).toList(),
+        onChanged: (value) {
+          setState(() {
+            _estadoPagoNota = value!;
+            // Si cambia a otro estado que no sea "Abono", limpiar el campo Abono.
+            if (_estadoPagoNota != 'Abono') {
+              _abonoController.clear();
+            }
+          });
+        },
         decoration: InputDecoration(
           border: OutlineInputBorder(),
           labelText: 'Estado de pago',
@@ -310,17 +325,16 @@ onChanged: _prendas.isNotEmpty ? (value) {
         ),
       );
     }
-    return CircularProgressIndicator(); // Muestra un indicador de carga si el estado no es CrearNotaInicial
+    return const CircularProgressIndicator();
   },
 ),
-
 
 
 Padding(
   padding: const EdgeInsets.symmetric(vertical: 8.0),
   child: TextField(
     controller: _abonoController,
-    enabled: _EstadoPagoNota == 'Abono',
+    enabled: _estadoPagoNota == 'Abono', 
     keyboardType: TextInputType.number,
     onChanged: (value) {
       setState(() {
@@ -335,6 +349,7 @@ Padding(
     ),
   ),
 ),
+
 
 
 Padding(
@@ -415,7 +430,7 @@ Padding(
 );
 
     }
-    return CircularProgressIndicator(); // Muestra un indicador de carga si el estado no es CrearNotaInicial
+    return CircularProgressIndicator(); 
   },
 ),
 
@@ -444,7 +459,7 @@ Padding(
         ),
       );
     }
-    return CircularProgressIndicator(); // Muestra un indicador de carga si el estado no es CrearNotaInicial
+    return CircularProgressIndicator(); 
   },
 ),
 
@@ -454,12 +469,12 @@ Padding(
 Padding(
   padding: const EdgeInsets.symmetric(vertical: 8.0),
   child: TextField(
-    enabled: false, // Deshabilitado para edición
+    enabled: false, 
     decoration: const InputDecoration(
       border: OutlineInputBorder(),
       labelText: 'Cantidad de prendas',
     ),
-    controller: TextEditingController(text: '1'), // Siempre muestra "1"
+    controller: TextEditingController(text: '1'), 
   ),
 ),
 Padding(
@@ -468,7 +483,7 @@ Padding(
     builder: (context, state) {
       if (state is CrearNotaInicial) {
         return DropdownButtonFormField<String>(
-          value: _color, // Color seleccionado actualmente
+          value: _color,
           items: state.colores
               .map((color) => DropdownMenuItem<String>(
                     value: color,
@@ -477,7 +492,7 @@ Padding(
               .toList(),
           onChanged: (value) {
             setState(() {
-              _color = value; // Actualiza el color seleccionado
+              _color = value; 
             });
           },
           decoration: const InputDecoration(
@@ -486,7 +501,7 @@ Padding(
           ),
         );
       }
-      return const CircularProgressIndicator(); // Indicador de carga
+      return const CircularProgressIndicator();
     },
   ),
 ),
@@ -494,7 +509,7 @@ Padding(
                                 Padding(
                                   padding: const EdgeInsets.symmetric(vertical: 8.0),
                                   child: TextField(
-                                    controller: _precioUnitarioController, // Ahora se usa el controlador adecuado
+                                    controller: _precioUnitarioController, 
                                     keyboardType: TextInputType.number,
                                     decoration: const InputDecoration(
                                       border: OutlineInputBorder(),
@@ -515,7 +530,6 @@ Center(
   ),
 ),
 const SizedBox(height: 16.0),
-// Tabla para mostrar las prendas agregadas
 if (_prendas.isNotEmpty)
   Expanded(
     child: SingleChildScrollView(
@@ -530,10 +544,9 @@ if (_prendas.isNotEmpty)
   ],
   rows: _prendas.map(
     (prenda) {
-      // Calculamos el subtotal solo si existen valores válidos
       double subtotal = prenda['precioUnitario'] != null && prenda['cantidad'] != null
           ? prenda['precioUnitario'] * prenda['cantidad']
-          : 0.0;  // Si no existe el valor, lo tratamos como 0
+          : 0.0;
 
       return DataRow(
         cells: [
@@ -541,7 +554,7 @@ if (_prendas.isNotEmpty)
           DataCell(Text(prenda['servicio'] ?? '')),
           DataCell(Text(prenda['cantidad'].toString())),
           DataCell(Text(prenda['precioUnitario'].toStringAsFixed(2))),
-          DataCell(Text(subtotal.toStringAsFixed(2))), // Usamos el valor calculado
+          DataCell(Text(subtotal.toStringAsFixed(2))),
         ],
       );
     },
@@ -576,6 +589,7 @@ if (_prendas.isNotEmpty)
           ),
           const SizedBox(height: 100.0),
         ],
+        
       ),
     );
   }

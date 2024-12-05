@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:tintoreriadigital/bd/bdmodel.dart';
+import 'package:tintoreriadigital/vistas/crearNota.dart';
 
 class Buscar extends StatefulWidget {
-  const Buscar({super.key});
+  final Function(int) cambiarTab; // Declarar el parámetro cambiarTab
+
+  const Buscar({super.key, required this.cambiarTab});
 
   @override
   State<Buscar> createState() => _BuscarState();
@@ -64,31 +67,37 @@ class _BuscarState extends State<Buscar> {
   }
 
   Widget _buildItem(Map<String, dynamic> item) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: item.entries.map((entry) {
-        return Padding(
-          padding: const EdgeInsets.symmetric(vertical: 4.0),
-          child: Row(
-            children: [
-              Text(
-                "${entry.key}: ",
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black87,
+    return GestureDetector(
+      onTap: () {
+        // Cambiar de pestaña a Crear Nota
+        widget.cambiarTab(2); // Llama a cambiarTab con el índice de la pestaña
+      },
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: item.entries.map((entry) {
+          return Padding(
+            padding: const EdgeInsets.symmetric(vertical: 4.0),
+            child: Row(
+              children: [
+                Text(
+                  "${entry.key}: ",
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                  ),
                 ),
-              ),
-              Expanded(
-                child: Text(
-                  entry.value.toString(),
-                  style: TextStyle(color: Colors.black54),
-                  overflow: TextOverflow.ellipsis,
+                Expanded(
+                  child: Text(
+                    entry.value.toString(),
+                    style: const TextStyle(color: Colors.black54),
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
-              ),
-            ],
-          ),
-        );
-      }).toList(),
+              ],
+            ),
+          );
+        }).toList(),
+      ),
     );
   }
 

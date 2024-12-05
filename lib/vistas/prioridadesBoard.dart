@@ -52,7 +52,7 @@ class _PrioridadesBoardState extends State<prioridadesBoard> {
               items: state.notas.map((nota) {
                 return SimpleItem(
                   title: '${nota['nombreCliente']} - Nota #${nota['idNota']}',
-                  subtitle: 'Importe: ${nota['importe']} | Fecha: ${nota['fechaRecibido']} | Estado: ${nota['estado']}',
+                  subtitle: 'Importe: ${nota['importe']} | Estado: ${nota['estado']}',
                   notas: nota,  // Pasa la nota completa si es necesario mostrarla
                 );
               }).toList(),
@@ -98,6 +98,7 @@ class _PrioridadesBoardState extends State<prioridadesBoard> {
     );
   }
 
+
   Widget _buildCard(AppFlowyGroupItem item) {
     final cardBackgroundColor = Theme.of(context).cardColor;
     final textColor = Theme.of(context).textTheme.bodyLarge?.color ?? Colors.black;
@@ -108,13 +109,13 @@ class _PrioridadesBoardState extends State<prioridadesBoard> {
 
     throw UnimplementedError();
   }
-
 Widget _buildNotaCard(SimpleItem item) {
   final prendas = item.notas['prendas'] as List<Map<String, dynamic>>?;
 
   return Card(
     margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
     elevation: 4,
+    color: Colors.grey[100],  // Establece un color personalizado
     child: Padding(
       padding: const EdgeInsets.all(16.0),
       child: Column(
@@ -144,6 +145,7 @@ Widget _buildNotaCard(SimpleItem item) {
     ),
   );
 }
+
 
 }
 

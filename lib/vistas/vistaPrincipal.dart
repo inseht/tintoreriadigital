@@ -23,47 +23,79 @@ class _MainViewState extends State<MainView> with SingleTickerProviderStateMixin
     _tabController = TabController(length: 4, vsync: this);
   }
 
+  void _cambiarTab(int index) {
+    setState(() {
+      _tabController.index = index; // Cambia la pestaña activa
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
-final themeProvider = Provider.of<ThemeProvider>(context);
-
+    final themeProvider = Provider.of<ThemeProvider>(context);
 
     return Scaffold(
       appBar: AppBar(
         title: Text(
           'Tintorería Digital',
-            style: GoogleFonts.lexend(
-            color: Color.fromRGBO(226, 244, 250, 1),
+          style: GoogleFonts.lexend(
+            color: const Color.fromRGBO(226, 244, 250, 1),
             fontSize: 40,
           ),
         ),
-        actions: [
-          IconButton(
-            isSelected: themeProvider.isDark,
-            icon: const Icon(Icons.wb_sunny_outlined),
-            selectedIcon: const Icon(Icons.brightness_2_outlined),
-            onPressed: () {
-              themeProvider.toggleTheme();
-            },
-          ),
-        ],
         bottom: TabBar(
           controller: _tabController,
-          tabs: const [
-            Tab(icon: Icon(Icons.developer_board), text: 'Prioridades'),
-            Tab(icon: Icon(Icons.search), text: 'Buscar'),
-            Tab(icon: Icon(Icons.note_add), text: 'Crear Nota'),
-            Tab(icon: Icon(Icons.contact_phone_outlined), text: 'Proveedores'),
-          ],
+tabs: [
+  Tab(
+    icon: Icon(
+      Icons.developer_board,
+      size: 35,  // Ajusta el tamaño del ícono aquí
+    ),
+    child: Text(
+      'Prioridades',
+      style: TextStyle(fontSize: 24),  // Ajusta el tamaño de la fuente aquí
+    ),
+  ),
+  Tab(
+    icon: Icon(
+      Icons.search,
+      size: 35,  // Ajusta el tamaño del ícono aquí
+    ),
+    child: Text(
+      'Buscar',
+      style: TextStyle(fontSize: 24),  // Ajusta el tamaño de la fuente aquí
+    ),
+  ),
+  Tab(
+    icon: Icon(
+      Icons.note_add,
+      size: 35,  // Ajusta el tamaño del ícono aquí
+    ),
+    child: Text(
+      'Crear Nota',
+      style: TextStyle(fontSize: 24),  // Ajusta el tamaño de la fuente aquí
+    ),
+  ),
+  Tab(
+    icon: Icon(
+      Icons.contact_phone_outlined,
+      size:35,  // Ajusta el tamaño del ícono aquí
+    ),
+    child: Text(
+      'Proveedores',
+      style: TextStyle(fontSize: 24),  // Ajusta el tamaño de la fuente aquí
+    ),
+  ),
+],
+
         ),
       ),
       body: TabBarView(
         controller: _tabController,
-        children: const [
-          Prioridades(),
-          Buscar(),
-          CrearNota(),
-          Proveedores(),
+        children: [
+          const Prioridades(),
+          Buscar(cambiarTab: _cambiarTab), // Pasar _cambiarTab aquí
+          const CrearNota(),
+          const Proveedores(),
         ],
       ),
     );

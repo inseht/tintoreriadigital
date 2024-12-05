@@ -174,82 +174,62 @@ create: (_) => ProveedoresBloc()..add(ObtenerProveedores()),
     );
   }
 
-  Widget _crearTablaProveedores(List<Map<String, dynamic>> proveedores) {
-    return Padding(
-      padding: const EdgeInsets.all(20.0),
-      child: Table(
-        border: TableBorder.all(),
-        children: [
-          const TableRow(
-            children: [
-              Padding(
-                padding: EdgeInsets.all(8.0),
-                child: Text('ID', style: TextStyle(fontWeight: FontWeight.bold)),
-              ),
-              Padding(
-                padding: EdgeInsets.all(8.0),
-                child: Text('Nombre', style: TextStyle(fontWeight: FontWeight.bold)),
-              ),
-              Padding(
-                padding: EdgeInsets.all(8.0),
-                child: Text('Razón', style: TextStyle(fontWeight: FontWeight.bold)),
-              ),
-              Padding(
-                padding: EdgeInsets.all(8.0),
-                child: Text('Contacto 1', style: TextStyle(fontWeight: FontWeight.bold)),
-              ),
-              Padding(
-                padding: EdgeInsets.all(8.0),
-                child: Text('Contacto 2', style: TextStyle(fontWeight: FontWeight.bold)),
-              ),
-              Padding(
-                padding: EdgeInsets.all(8.0),
-                child: Text('Acciones', style: TextStyle(fontWeight: FontWeight.bold)),
-              ),
-            ],
-          ),
-          for (var proveedor in proveedores)
-            TableRow(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Text(proveedor['idProveedor'].toString()),
-                ),
-                Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Text(proveedor['nombreProveedor'] ?? 'N/A'),
-                ),
-                Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Text(proveedor['razonProveedor'] ?? 'N/A'),
-                ),
-                Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Text(proveedor['contactoProveedor1'] ?? 'N/A'),
-                ),
-                Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Text(proveedor['contactoProveedor2'] ?? 'N/A'),
-                ),
-                Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Row(
-                    children: [
-                      IconButton(
-                        icon: const Icon(Icons.edit),
-                        onPressed: () => _editarProveedor(proveedor),
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.delete),
-                        onPressed: () => _eliminarProveedor(proveedor['idProveedor']),
-                      ),
-                    ],
+Widget _crearTablaProveedores(List<Map<String, dynamic>> proveedores) {
+  return Padding(
+    padding: const EdgeInsets.all(20.0),
+    child: DataTable(
+      columnSpacing: 180.0,
+      horizontalMargin: 60.0,
+      border: TableBorder.all(color: Colors.grey.shade300, borderRadius: BorderRadius.circular(10)),
+      headingRowColor: MaterialStateProperty.resolveWith<Color>(
+          (states) => Colors.blueGrey.shade100),
+      columns: const [
+        DataColumn(
+          label: Text('ID', style: TextStyle(fontWeight: FontWeight.bold)),
+        ),
+        DataColumn(
+          label: Text('Nombre', style: TextStyle(fontWeight: FontWeight.bold)),
+        ),
+        DataColumn(
+          label: Text('Razón', style: TextStyle(fontWeight: FontWeight.bold)),
+        ),
+        DataColumn(
+          label: Text('Contacto 1', style: TextStyle(fontWeight: FontWeight.bold)),
+        ),
+        DataColumn(
+          label: Text('Contacto 2', style: TextStyle(fontWeight: FontWeight.bold)),
+        ),
+        DataColumn(
+          label: Text('Acciones', style: TextStyle(fontWeight: FontWeight.bold)),
+        ),
+      ],
+      rows: proveedores.map((proveedor) {
+        return DataRow(
+          cells: [
+            DataCell(Text(proveedor['idProveedor'].toString())),
+            DataCell(Text(proveedor['nombreProveedor'] ?? 'N/A')),
+            DataCell(Text(proveedor['razonProveedor'] ?? 'N/A')),
+            DataCell(Text(proveedor['contactoProveedor1'] ?? 'N/A')),
+            DataCell(Text(proveedor['contactoProveedor2'] ?? 'N/A')),
+            DataCell(
+              Row(
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.edit, color: Colors.blue),
+                    onPressed: () => _editarProveedor(proveedor),
                   ),
-                ),
-              ],
+                  IconButton(
+                    icon: const Icon(Icons.delete, color: Colors.red),
+                    onPressed: () => _eliminarProveedor(proveedor['idProveedor']),
+                  ),
+                ],
+              ),
             ),
-        ],
-      ),
-    );
-  }
+          ],
+        );
+      }).toList(),
+    ),
+  );
+}
+
 }

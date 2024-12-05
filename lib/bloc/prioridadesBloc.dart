@@ -17,10 +17,15 @@ class PrioridadesBloc extends Bloc<PrioridadesEvent, PrioridadesState> {
     on<CargarNotasEvent>(_onCargarNotas);
   }
 
-  Future<void> _onCargarNotas(CargarNotasEvent event, Emitter<PrioridadesState> emit) async {
-    // Obtiene las notas con sus prendas asociadas
-    final notasConPrendas = await BdModel.obtenerNotasConPrendas();
-    emit(NotasCargadasState(notasConPrendas));
-  }
+Future<void> _onCargarNotas(CargarNotasEvent event, Emitter<PrioridadesState> emit) async {
+  final notasConPrioridad1 = await BdModel.obtenerNotas();
+  final notas = notasConPrioridad1
+      .where((nota) => nota['prioridad'] == 1 || nota['estado'] == 'Pendiente')
+      .toList();
+  emit(NotasCargadasState(notas));
+}
+
+
+
 
 }

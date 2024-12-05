@@ -125,15 +125,18 @@ class CrearNotaBloc extends Bloc<CrearNotaEvent, CrearNotaState> {
     }
   }
 
-  Future<void> _onEnviarFormulario(EnviarFormulario event, Emitter<CrearNotaState> emit) async {
-    emit(CrearPrendaInProgress());
-    try {
-      await BdModel.crearNotaConPrendas(event.nota, event.prendas);
-      emit(FormularioEnviado());
-    } catch (e) {
-      emit(FormularioInvalido('Error al guardar la nota: $e'));
-    }
+Future<void> _onEnviarFormulario(EnviarFormulario event, Emitter<CrearNotaState> emit) async {
+  emit(CrearPrendaInProgress());
+  try {
+    await BdModel.crearNotaConPrendas(event.nota, event.prendas);
+    emit(FormularioEnviado()); // Cambia el estado para notificar que la acción terminó
+    emit(CrearNotaInicial()); // Reinicia el formulario para permitir nuevas acciones
+  } catch (e) {
+    emit(FormularioInvalido('Error al guardar la nota: $e'));
+    emit(CrearNotaInicial()); // Asegúrate de que la interfaz pueda restablecerse tras el error
   }
+}
+
 
   Future<void> _onCrearPrendaSubmitted(CrearPrendaSubmitted event, Emitter<CrearNotaState> emit) async {
     emit(CrearPrendaInProgress());
@@ -153,15 +156,48 @@ class CrearNotaBloc extends Bloc<CrearNotaEvent, CrearNotaState> {
       emit(FormularioInvalido('Error al eliminar la nota: $e'));
     }
   }
+Future<void> _onActualizarNota(ActualizarNota event, Emitter<CrearNotaState> emit) async {
+  try {
+    // Inicializar directamente la base de datos
+    final db = await BdModel.inicializarBD();
 
-  Future<void> _onActualizarNota(ActualizarNota event, Emitter<CrearNotaState> emit) async {
-    try {
-      await BdModel.actualizarNota(event.idNota, event.nuevaNota);
-      emit(FormularioEnviado());
-    } catch (e) {
-      emit(FormularioInvalido('Error al actualizar la nota: $e'));
+    // Consultar la nota existente por ID
+    final resultado = await db.query(
+      'Notas', // Nombre de la tabla
+      where: 'idNota = ?', // Condición para filtrar por ID
+      whereArgs: [event.idNota],
+      limit: 1, // Solo una fila
+    );
+
+    if (resultado.isEmpty) {
+      throw Exception('Nota no encontrada');
     }
+
+    final notaActual = resultado.first; // Tomar la primera coincidencia
+    final nuevaNota = Map<String, dynamic>.from(event.nuevaNota);
+
+    // Validar si el estado de pago cambia a "Pagado" y el importe está vacío
+    if (nuevaNota['estadoPago'] == 'Pagado' && (nuevaNota['importe'] == null || nuevaNota['importe'].isEmpty)) {
+      nuevaNota['importe'] = notaActual['importe']; // Mantén el importe existente
+    }
+
+    // Actualizar la nota en la base de datos
+    await db.update(
+      'Notas', // Tabla
+      nuevaNota, // Valores nuevos
+      where: 'idNota = ?', // Condición para filtrar por ID
+      whereArgs: [event.idNota],
+    );
+
+    emit(FormularioEnviado()); // Emitir estado de éxito
+  } catch (e) {
+    emit(FormularioInvalido('Error al actualizar la nota: $e'));
   }
+}
+
+
+
+
 
   Future<void> _onActualizarPrenda(ActualizarPrenda event, Emitter<CrearNotaState> emit) async {
     try {

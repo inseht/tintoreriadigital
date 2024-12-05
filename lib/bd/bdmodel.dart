@@ -16,7 +16,7 @@ class BdModel {
     try {
       await db.execute(''' 
         CREATE TABLE IF NOT EXISTS Notas (
-          idNota INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+          idNota INTEGER NOT NULL PRIMARY KEY,
           nombreCliente TEXT NOT NULL,
           telefonoCliente TEXT NOT NULL,
           fechaRecibido DATE NOT NULL,
@@ -32,7 +32,7 @@ class BdModel {
 
       await db.execute(''' 
         CREATE TABLE IF NOT EXISTS Prendas (
-          idPrenda INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+          idPrenda INTEGER NOT NULL PRIMARY KEY,
           tipo TEXT NOT NULL,
           servicio TEXT NOT NULL,
           precioUnitario FLOAT NOT NULL, 
@@ -45,7 +45,7 @@ class BdModel {
 
       await db.execute(''' 
         CREATE TABLE IF NOT EXISTS Proveedores (
-          idProveedor INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+          idProveedor INTEGER NOT NULL PRIMARY KEY,
           nombreProveedor TEXT NOT NULL,
           razonProveedor TEXT,
           contactoProveedor1 TEXT NOT NULL,
@@ -56,6 +56,7 @@ class BdModel {
     } catch (e) {
       print('Error al inicializar la base de datos: $e');
     }
+
 
     return db;
   }
@@ -71,14 +72,16 @@ class BdModel {
         'fechaEstimada': dateFormat.format(nota['fechaEstimada']),
       };
 
-      // Insertar la nota
-      int idNota = await db.insert('Notas', notaConFechas);
+print('Insertando nota: $notaConFechas');
+int idNota = await db.insert('Notas', notaConFechas);
+print('Nota insertada con id: $idNota');
 
-      // Insertar las prendas y vincularlas directamente con la nota
-      for (var prenda in prendas) {
-        prenda['idNota'] = idNota;  // Relacionar la prenda con la nota
-        await db.insert('Prendas', prenda); // Insertar la prenda con idNota
-      }
+for (var prenda in prendas) {
+  prenda['idNota'] = idNota;
+  print('Insertando prenda: $prenda');
+  await db.insert('Prendas', prenda);
+}
+
     } catch (e) {
       print('Error al crear la nota con prendas: $e');
     } finally {
@@ -86,15 +89,24 @@ class BdModel {
     }
   }
 
-  static Future<List<Map<String, dynamic>>> obtenerNotasConPrendas() async {
-    final db = await inicializarBD();
-    final result = await db.rawQuery('''
-      SELECT * FROM Notas 
-      LEFT JOIN Prendas ON Notas.idNota = Prendas.idNota
-    ''');
-    await db.close();
-    return result;
-  }
+static Future<List<Map<String, dynamic>>> obtenerNotasConPrendas() async {
+  final db = await inicializarBD();
+  
+  // Mide el tiempo que toma ejecutar la consulta
+  final stopwatch = Stopwatch()..start();
+
+  final result = await db.rawQuery('''
+    SELECT n.idNota, n.nombreCliente, n.importe, n.estado, n.fechaRecibido, p.tipo, p.servicio, p.color
+    FROM notas AS n
+    LEFT JOIN prendas AS p ON n.idNota = p.idNota
+  ''');
+
+  stopwatch.stop();
+  print('Consulta realizada en: ${stopwatch.elapsedMilliseconds}ms');
+  
+  return result;
+}
+
 
   static Future<List<Map<String, dynamic>>> obtenerPrendas() async {
     final db = await inicializarBD();
@@ -226,4 +238,6 @@ class BdModel {
     final db = await inicializarBD();
     await db.update('Prendas', nuevaPrenda, where: 'idPrenda = ?', whereArgs: [idPrenda]);
   }
+
+  
 }
