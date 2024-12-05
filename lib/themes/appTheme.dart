@@ -23,26 +23,28 @@ class AppTheme {
       border: OutlineInputBorder(),
       labelStyle: TextStyle(
         color: Color.fromRGBO(55, 75, 89, 1), // Azul oscuro para las etiquetas
+        fontSize: 18, // Aumento el tamaño de las etiquetas
       ),
       hintStyle: TextStyle(
         color: Color.fromRGBO(55, 75, 89, 1), // Azul oscuro para los hints
+        fontSize: 18, // Aumento el tamaño de los hints
       ),
     ),
     elevatedButtonTheme: ElevatedButtonThemeData(
       style: ElevatedButton.styleFrom(
         textStyle: TextStyle(
-          fontSize: 16,  // Tamaño de la fuente del botón
+          fontSize: 18,  // Tamaño de la fuente del botón aumentado
         ),
       ),
     ),
     textTheme: GoogleFonts.montserratTextTheme(
       TextTheme(
         bodyMedium: TextStyle(
-          fontSize: 16,
+          fontSize: 18, // Aumento el tamaño de los textos normales
           color: Color.fromRGBO(55, 75, 89, 1), // Azul oscuro para el texto
         ),
         titleLarge: TextStyle(
-          fontSize: 20,
+          fontSize: 24, // Aumento el tamaño de los títulos
           color: Color.fromRGBO(55, 75, 89, 1), // Azul oscuro para los títulos
         ),
       ),
@@ -74,26 +76,28 @@ class AppTheme {
       border: OutlineInputBorder(),
       labelStyle: TextStyle(
         color: Color.fromRGBO(226, 244, 250, 1), // Blanco para las etiquetas en el modo oscuro
+        fontSize: 18, // Aumento el tamaño de las etiquetas
       ),
       hintStyle: TextStyle(
         color: Color.fromRGBO(226, 244, 250, 1), // Blanco para los hints en el modo oscuro
+        fontSize: 18, // Aumento el tamaño de los hints
       ),
     ),
     elevatedButtonTheme: ElevatedButtonThemeData(
       style: ElevatedButton.styleFrom(
         textStyle: TextStyle(
-          fontSize: 16,  // Tamaño de la fuente del botón
+          fontSize: 18,  // Tamaño de la fuente del botón aumentado
         ),
       ),
     ),
     textTheme: GoogleFonts.montserratTextTheme(
       TextTheme(
         bodyMedium: TextStyle(
-          fontSize: 16,
+          fontSize: 18, // Aumento el tamaño de los textos normales
           color: Color.fromRGBO(55, 75, 89, 1), // Azul oscuro para el texto en el modo oscuro
         ),
         titleLarge: TextStyle(
-          fontSize: 20,
+          fontSize: 24, // Aumento el tamaño de los títulos
           color: Color.fromRGBO(55, 75, 89, 1), // Azul oscuro para los títulos
         ),
       ),

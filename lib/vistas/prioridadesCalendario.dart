@@ -64,11 +64,37 @@ class _PrioridadesCalendarioState extends State<prioridadesCalendario> {
                           itemCount: _notasSeleccionadas.length,
                           itemBuilder: (context, index) {
                             final nota = _notasSeleccionadas[index];
-                            return ListTile(
-                              title: Text(
-                                  'Nota #${nota['idNota']} - ${nota['nombreCliente']}'),
-                              subtitle: Text(
-                                'Importe: ${nota['importe']}\nEstado: ${nota['estado']}\nFecha: ${nota['fechaRecibido']}',
+                            // Determinamos el color del fondo basado en el estado
+                            Color fondoEstado = _getColorEstado(nota['estado']);
+                            return Card(
+                              margin: const EdgeInsets.all(10),
+                              elevation: 5,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              color: fondoEstado,
+                              child: ListTile(
+                                contentPadding: const EdgeInsets.all(15),
+                                title: Text(
+                                  'Nota #${nota['idNota']} - ${nota['nombreCliente']}',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 18,
+                                  ),
+                                ),
+                                subtitle: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Importe: ${nota['importe']}',
+                                      style: TextStyle(fontSize: 14),
+                                    ),
+                                    Text(
+                                      'Estado: ${nota['estado']}',
+                                      style: TextStyle(fontSize: 14),
+                                    ),
+                                  ],
+                                ),
                               ),
                             );
                           },
@@ -82,5 +108,19 @@ class _PrioridadesCalendarioState extends State<prioridadesCalendario> {
         },
       ),
     );
+  }
+
+  // Función para obtener el color según el estado de la nota
+  Color _getColorEstado(String estado) {
+    switch (estado.toLowerCase()) {
+      case 'completado':
+        return Colors.green.shade200;
+      case 'pendiente':
+        return Colors.amber.shade200;
+      case 'en proceso':
+        return Colors.blue.shade200;
+      default:
+        return Colors.grey.shade300;
+    }
   }
 }
