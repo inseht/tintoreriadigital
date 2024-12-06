@@ -43,7 +43,7 @@ class _PrioridadesBoardState extends State<prioridadesBoard> {
         builder: (context, state) {
           if (state is NotasCargadasState) {
             if (state.notas.isEmpty) {
-              return const Center(child: Text('No hay notas con prioridad 1.'));
+              return const Center(child: Text('No hay notas con prioridad.'));
             }
 
             final groupPrioridades = AppFlowyGroupData(
@@ -53,7 +53,7 @@ class _PrioridadesBoardState extends State<prioridadesBoard> {
                 return SimpleItem(
                   title: '${nota['nombreCliente']} - Nota #${nota['idNota']}',
                   subtitle: 'Importe: ${nota['importe']} | Estado: ${nota['estado']}',
-                  notas: nota,  // Pasa la nota completa si es necesario mostrarla
+                  notas: nota,  
                 );
               }).toList(),
             );
@@ -98,13 +98,12 @@ class _PrioridadesBoardState extends State<prioridadesBoard> {
     );
   }
 
-
   Widget _buildCard(AppFlowyGroupItem item) {
     final cardBackgroundColor = Theme.of(context).cardColor;
     final textColor = Theme.of(context).textTheme.bodyLarge?.color ?? Colors.black;
 
     if (item is SimpleItem) {
-      return _buildNotaCard(item);  // Ahora usamos este método
+      return _buildNotaCard(item); 
     }
 
     throw UnimplementedError();
@@ -113,9 +112,9 @@ Widget _buildNotaCard(SimpleItem item) {
   final prendas = item.notas['prendas'] as List<Map<String, dynamic>>?;
 
   return Card(
-    margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+    margin: const EdgeInsets.symmetric(vertical: 50, horizontal: 50),
     elevation: 4,
-    color: Colors.grey[100],  // Establece un color personalizado
+    color: Colors.grey[100], 
     child: Padding(
       padding: const EdgeInsets.all(16.0),
       child: Column(
@@ -146,16 +145,14 @@ Widget _buildNotaCard(SimpleItem item) {
   );
 }
 
-
 }
-
 class SimpleItem extends AppFlowyGroupItem {
   final String title;
   final String subtitle;
   final Map<String, dynamic> notas;
 
   SimpleItem({required this.title, required this.subtitle, required this.notas});
-
+  
   @override
   String get id => title;
 }

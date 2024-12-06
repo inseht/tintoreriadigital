@@ -1,7 +1,7 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../bd/bdmodel.dart';
 
-// 1. **Estados**
+// Estados
 abstract class CrearNotaState {}
 
 class CrearNotaInicial extends CrearNotaState {
@@ -43,7 +43,7 @@ class NotasConPrendasState extends CrearNotaState {
   NotasConPrendasState(this.notasConPrendas);
 }
 
-// 2. **Eventos**
+// Eventos
 abstract class CrearNotaEvent {}
 
 class ValidarFormulario extends CrearNotaEvent {
@@ -101,7 +101,7 @@ class ActualizarPrenda extends CrearNotaEvent {
 
 class CargarNotasConPrendas extends CrearNotaEvent {}
 
-// 3. **BLoC**
+// b
 class CrearNotaBloc extends Bloc<CrearNotaEvent, CrearNotaState> {
   CrearNotaBloc() : super(CrearNotaInicial()) {
     on<ValidarFormulario>(_onValidarFormulario);
@@ -129,11 +129,11 @@ Future<void> _onEnviarFormulario(EnviarFormulario event, Emitter<CrearNotaState>
   emit(CrearPrendaInProgress());
   try {
     await BdModel.crearNotaConPrendas(event.nota, event.prendas);
-    emit(FormularioEnviado()); // Cambia el estado para notificar que la acción terminó
-    emit(CrearNotaInicial()); // Reinicia el formulario para permitir nuevas acciones
+    emit(FormularioEnviado()); 
+    emit(CrearNotaInicial());
   } catch (e) {
     emit(FormularioInvalido('Error al guardar la nota: $e'));
-    emit(CrearNotaInicial()); // Asegúrate de que la interfaz pueda restablecerse tras el error
+    emit(CrearNotaInicial()); 
   }
 }
 
@@ -151,53 +151,45 @@ Future<void> _onEnviarFormulario(EnviarFormulario event, Emitter<CrearNotaState>
   Future<void> _onEliminarNota(EliminarNota event, Emitter<CrearNotaState> emit) async {
     try {
       await BdModel.eliminarNota(event.idNota);
-      emit(FormularioEnviado());  // Aquí puedes emitir un estado de éxito o hacer algo para actualizar la vista
+      emit(FormularioEnviado()); 
     } catch (e) {
       emit(FormularioInvalido('Error al eliminar la nota: $e'));
     }
   }
 Future<void> _onActualizarNota(ActualizarNota event, Emitter<CrearNotaState> emit) async {
   try {
-    // Inicializar directamente la base de datos
-    final db = await BdModel.inicializarBD();
 
-    // Consultar la nota existente por ID
+    final db = await BdModel.inicializarBD();
     final resultado = await db.query(
-      'Notas', // Nombre de la tabla
-      where: 'idNota = ?', // Condición para filtrar por ID
+      'Notas', 
+      where: 'idNota = ?', 
       whereArgs: [event.idNota],
-      limit: 1, // Solo una fila
+      limit: 1, 
     );
 
     if (resultado.isEmpty) {
       throw Exception('Nota no encontrada');
     }
 
-    final notaActual = resultado.first; // Tomar la primera coincidencia
+    final notaActual = resultado.first; 
     final nuevaNota = Map<String, dynamic>.from(event.nuevaNota);
 
-    // Validar si el estado de pago cambia a "Pagado" y el importe está vacío
     if (nuevaNota['estadoPago'] == 'Pagado' && (nuevaNota['importe'] == null || nuevaNota['importe'].isEmpty)) {
-      nuevaNota['importe'] = notaActual['importe']; // Mantén el importe existente
+      nuevaNota['importe'] = notaActual['importe']; 
     }
 
-    // Actualizar la nota en la base de datos
     await db.update(
-      'Notas', // Tabla
-      nuevaNota, // Valores nuevos
-      where: 'idNota = ?', // Condición para filtrar por ID
+      'Notas',
+      nuevaNota,
+      where: 'idNota = ?', 
       whereArgs: [event.idNota],
     );
 
-    emit(FormularioEnviado()); // Emitir estado de éxito
+    emit(FormularioEnviado()); 
   } catch (e) {
     emit(FormularioInvalido('Error al actualizar la nota: $e'));
   }
 }
-
-
-
-
 
   Future<void> _onActualizarPrenda(ActualizarPrenda event, Emitter<CrearNotaState> emit) async {
     try {

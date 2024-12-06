@@ -35,60 +35,63 @@ class _MainViewState extends State<MainView> with SingleTickerProviderStateMixin
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(
-          'Tintorería Digital',
-          style: GoogleFonts.lexend(
-            color: const Color.fromRGBO(226, 244, 250, 1),
-            fontSize: 40,
+  title: Text(
+    'Tintorería Digital',
+    style: GoogleFonts.lexend(
+      color: const Color.fromRGBO(226, 244, 250, 1),
+      fontSize: 40,
+    ),
+  ),
+  bottom: PreferredSize(
+    preferredSize: Size.fromHeight(100.0), // Ajusta la altura aquí
+    child: TabBar(
+      controller: _tabController,
+      tabs: [
+        Tab(
+          icon: Icon(
+            Icons.developer_board,
+            size: 35,
+          ),
+          child: Text(
+            'Prioridades',
+            style: TextStyle(fontSize: 24),
           ),
         ),
-        bottom: TabBar(
-          controller: _tabController,
-tabs: [
-  Tab(
-    icon: Icon(
-      Icons.developer_board,
-      size: 35,  // Ajusta el tamaño del ícono aquí
-    ),
-    child: Text(
-      'Prioridades',
-      style: TextStyle(fontSize: 24),  // Ajusta el tamaño de la fuente aquí
-    ),
-  ),
-  Tab(
-    icon: Icon(
-      Icons.search,
-      size: 35,  // Ajusta el tamaño del ícono aquí
-    ),
-    child: Text(
-      'Buscar',
-      style: TextStyle(fontSize: 24),  // Ajusta el tamaño de la fuente aquí
-    ),
-  ),
-  Tab(
-    icon: Icon(
-      Icons.note_add,
-      size: 35,  // Ajusta el tamaño del ícono aquí
-    ),
-    child: Text(
-      'Crear Nota',
-      style: TextStyle(fontSize: 24),  // Ajusta el tamaño de la fuente aquí
-    ),
-  ),
-  Tab(
-    icon: Icon(
-      Icons.contact_phone_outlined,
-      size:35,  // Ajusta el tamaño del ícono aquí
-    ),
-    child: Text(
-      'Proveedores',
-      style: TextStyle(fontSize: 24),  // Ajusta el tamaño de la fuente aquí
-    ),
-  ),
-],
-
+        Tab(
+          icon: Icon(
+            Icons.search,
+            size: 35,
+          ),
+          child: Text(
+            'Buscar',
+            style: TextStyle(fontSize: 24),
+          ),
         ),
-      ),
+        Tab(
+          icon: Icon(
+            Icons.note_add,
+            size: 35,
+          ),
+          child: Text(
+            'Crear Nota',
+            style: TextStyle(fontSize: 24),
+          ),
+        ),
+        Tab(
+          icon: Icon(
+            Icons.contact_phone_outlined,
+            size: 35,
+          ),
+          child: Text(
+            'Proveedores',
+            style: TextStyle(fontSize: 24),
+          ),
+        ),
+      ],
+    ),
+  ),
+),
+
       body: TabBarView(
         controller: _tabController,
         children: [

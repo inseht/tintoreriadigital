@@ -91,8 +91,6 @@ for (var prenda in prendas) {
 
 static Future<List<Map<String, dynamic>>> obtenerNotasConPrendas() async {
   final db = await inicializarBD();
-  
-  // Mide el tiempo que toma ejecutar la consulta
   final stopwatch = Stopwatch()..start();
 
   final result = await db.rawQuery('''
@@ -106,7 +104,6 @@ static Future<List<Map<String, dynamic>>> obtenerNotasConPrendas() async {
   
   return result;
 }
-
 
   static Future<List<Map<String, dynamic>>> obtenerPrendas() async {
     final db = await inicializarBD();
@@ -225,8 +222,8 @@ static Future<List<Map<String, dynamic>>> obtenerNotasConPrendas() async {
 
   static Future<void> eliminarNota(int idNota) async {
     final db = await inicializarBD();
-    await db.delete('Prendas', where: 'idNota = ?', whereArgs: [idNota]);  // Elimina prendas asociadas
-    await db.delete('Notas', where: 'idNota = ?', whereArgs: [idNota]);  // Elimina la nota
+    await db.delete('Prendas', where: 'idNota = ?', whereArgs: [idNota]); 
+    await db.delete('Notas', where: 'idNota = ?', whereArgs: [idNota]); 
   }
 
   static Future<void> actualizarNota(int idNota, Map<String, dynamic> nuevaNota) async {

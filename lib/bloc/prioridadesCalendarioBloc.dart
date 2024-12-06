@@ -24,19 +24,17 @@ class CalendarioBloc extends Bloc<CalendarioEvent, CalendarioState> {
   Future<void> _onCargarFechas(
       CargarFechasConPrioridad event, Emitter<CalendarioState> emit) async {
     try {
-      // Obtener las notas de la base de datos
       final notas = await BdModel.obtenerNotas();
       final notasFiltradas = notas.where((nota) =>
           nota['prioridad'] == 1 || nota['estado'] == 'Pendiente').toList();
 
-      // Crear el mapa de eventos usando LinkedHashMap
       final eventos = LinkedHashMap<DateTime, List<Map<String, dynamic>>>( 
         equals: isSameDay,
         hashCode: (key) => key.day + key.month * 100 + key.year * 10000,
       );
 
       for (final nota in notasFiltradas) {
-        final fechaRecibido = nota['fechaRecibido']; // Asumiendo que es un DateTime
+        final fechaRecibido = nota['fechaRecibido']; 
         try {
           final fecha = fechaRecibido as DateTime;
           eventos.putIfAbsent(fecha, () => []).add(nota);
@@ -45,7 +43,6 @@ class CalendarioBloc extends Bloc<CalendarioEvent, CalendarioState> {
         }
       }
 
-      // Emitir el estado con los eventos cargados
       emit(FechasCargadasState(eventos));
     } catch (e) {
       print('Error al cargar fechas con prioridad: $e');
@@ -68,13 +65,13 @@ class CalendarioWidget extends StatelessWidget {
             firstDay: DateTime.utc(2020, 1, 1),
             lastDay: DateTime.utc(2025, 12, 31),
             focusedDay: DateTime.now(),
-            locale: 'es_ES',  // Cambiar al idioma español
+            locale: 'es_ES',  
             eventLoader: (day) {
               return eventos[day] ?? [];
             },
             headerStyle: HeaderStyle(
               titleTextStyle: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-              formatButtonVisible: false, // Ocultar el botón de formato
+              formatButtonVisible: false, 
             ),
             calendarStyle: CalendarStyle(
               todayDecoration: BoxDecoration(
@@ -83,7 +80,7 @@ class CalendarioWidget extends StatelessWidget {
               selectedDecoration: BoxDecoration(
                 color: Colors.orange, shape: BoxShape.circle,
               ),
-              markersMaxCount: 3, // Limitar el número de eventos visibles
+              markersMaxCount: 3,
             ),
             onDaySelected: (selectedDay, focusedDay) {
               print('Día seleccionado: $selectedDay');

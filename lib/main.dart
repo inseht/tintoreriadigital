@@ -22,7 +22,6 @@ void main() {
       ..show();
   });
 }
-
 class MainApp extends StatelessWidget {
   const MainApp({super.key});
 
@@ -53,8 +52,6 @@ class MainApp extends StatelessWidget {
           builder: (context, themeProvider, child) {
             return MaterialApp(
               theme: AppTheme.lightTheme,
-              darkTheme: AppTheme.darkTheme,
-              themeMode: themeProvider.isDark ? ThemeMode.dark : ThemeMode.light,
               home: const MainView(),
               routes: {
                 '/proveedores': (context) => const Proveedores(),

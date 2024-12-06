@@ -35,7 +35,7 @@ class ProveedoresBloc extends Bloc<ProveedoresEvent, ProveedoresState> {
       final proveedores = await BdModel.obtenerProveedores();
       emit(ProveedoresLoaded(proveedores));
     } catch (e) {
-      emit(ProveedoresError('Error al cargar los proveedores: $e'));
+      emit(ProveedoresError('Error al cargar provedores $e'));
     }
   }
 }

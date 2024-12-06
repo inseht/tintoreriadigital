@@ -119,34 +119,70 @@ class _BuscarState extends State<Buscar> {
                   ? const Center(child: Text(''))
                   : resultadosFiltrados.isEmpty
                       ? const Center(child: Text('No hay resultados'))
-                      : ListView(
-                          children: resultadosFiltrados.entries.map((entry) {
-                            return Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  entry.key,
-                                  style: TextStyle(
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.bold,
-                                    color: Theme.of(context).primaryColor,
-                                  ),
-                                ),
-                                const SizedBox(height: 10),
-                                ...entry.value.map((item) {
-                                  return Card(
-                                    margin: const EdgeInsets.symmetric(vertical: 8.0),
-                                    elevation: 5,
-                                    child: Padding(
-                                      padding: const EdgeInsets.all(10.0),
-                                      child: _buildItem(item),
-                                    ),
-                                  );
-                                }).toList(),
-                                const SizedBox(height: 20),
-                              ],
-                            );
-                          }).toList(),
+                      : Row(
+                          children: [
+                            // Columna de proveedores
+                            Expanded(
+                              child: ListView(
+                                children: resultadosFiltrados.containsKey('proveedores')
+                                    ? [
+                                        Text(
+                                          'Proveedores',
+                                          style: TextStyle(
+                                            fontSize: 20,
+                                            fontWeight: FontWeight.bold,
+                                            color: Theme.of(context).primaryColor,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 10),
+                                        ...resultadosFiltrados['proveedores']!.map((item) {
+                                          return Card(
+                                            margin: const EdgeInsets.symmetric(vertical: 8.0),
+                                            elevation: 5,
+                                            child: Padding(
+                                              padding: const EdgeInsets.all(10.0),
+                                              child: _buildItem(item),
+                                            ),
+                                          );
+                                        }).toList(),
+                                      ]
+                                    : [
+                                        const Center(child: Text('No hay proveedores')),
+                                      ],
+                              ),
+                            ),
+                            const VerticalDivider(width: 1),
+                            // Columna de notas
+                            Expanded(
+                              child: ListView(
+                                children: resultadosFiltrados.containsKey('notas')
+                                    ? [
+                                        Text(
+                                          'Notas',
+                                          style: TextStyle(
+                                            fontSize: 20,
+                                            fontWeight: FontWeight.bold,
+                                            color: Theme.of(context).primaryColor,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 10),
+                                        ...resultadosFiltrados['notas']!.map((item) {
+                                          return Card(
+                                            margin: const EdgeInsets.symmetric(vertical: 8.0),
+                                            elevation: 5,
+                                            child: Padding(
+                                              padding: const EdgeInsets.all(10.0),
+                                              child: _buildItem(item),
+                                            ),
+                                          );
+                                        }).toList(),
+                                      ]
+                                    : [
+                                        const Center(child: Text('No hay notas')),
+                                      ],
+                              ),
+                            ),
+                          ],
                         ),
             ),
           ],

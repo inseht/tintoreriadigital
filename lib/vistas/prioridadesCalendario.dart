@@ -110,7 +110,6 @@ class _PrioridadesCalendarioState extends State<prioridadesCalendario> {
     );
   }
 
-  // Función para obtener el color según el estado de la nota
   Color _getColorEstado(String estado) {
     switch (estado.toLowerCase()) {
       case 'completado':

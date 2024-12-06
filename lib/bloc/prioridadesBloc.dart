@@ -25,7 +25,4 @@ Future<void> _onCargarNotas(CargarNotasEvent event, Emitter<PrioridadesState> em
   emit(NotasCargadasState(notas));
 }
 
-
-
-
 }

@@ -151,7 +151,6 @@ void _crearNota() {
     return;
   }
 
-  // Solo recalcula el importe si el estado no es "Pagado"
   double importeFinal = (_estadoPagoNota == 'Pagado')
       ? double.tryParse(_importeTotalController.text) ?? 0.0
       : _prendas.fold<double>(0.0, (sum, prenda) => sum + (prenda['subtotal'] ?? 0.0));
@@ -170,25 +169,24 @@ void _crearNota() {
 
   context.read<CrearNotaBloc>().add(EnviarFormulario(nota: nota, prendas: _prendas));
 
-  // Limpia el formulario
   _limpiarFormulario();
 }
 
 
 
-void _eliminarPrenda(int index) {
-  setState(() {
-    double precioUnitario = _prendas[index]['precioUnitario'];
-    int cantidad = _prendas[index]['cantidad'];
-    double importeParcial = precioUnitario * cantidad;
+    void _eliminarPrenda(int index) {
+      setState(() {
+        double precioUnitario = _prendas[index]['precioUnitario'];
+        int cantidad = _prendas[index]['cantidad'];
+        double importeParcial = precioUnitario * cantidad;
 
-    _prendas.removeAt(index);
+        _prendas.removeAt(index);
 
-    // Recalcular el importe total después de eliminar la prenda
-    double nuevoTotal = double.tryParse(_importeTotalController.text) ?? 0.0;
-    _importeTotalController.text = (nuevoTotal - importeParcial).toStringAsFixed(2);
-  });
-}
+        // Recalcular el importe total después de eliminar la prenda
+        double nuevoTotal = double.tryParse(_importeTotalController.text) ?? 0.0;
+        _importeTotalController.text = (nuevoTotal - importeParcial).toStringAsFixed(2);
+      });
+    }
 
 
 
@@ -268,66 +266,63 @@ void _eliminarPrenda(int index) {
                                     ),
                                   ),
                                 ),
-BlocBuilder<CrearNotaBloc, CrearNotaState>(
-  builder: (context, state) {
-    if (state is CrearNotaInicial) {
-      return DropdownButtonFormField<String>(
-        value: _estadoNota,
-        items: state.estadosNota
-            .map((estado) => DropdownMenuItem<String>(
-                  value: estado,
-                  child: Text(estado),
-                ))
-            .toList(),
-        onChanged: (value) {
-          setState(() {
-            _estadoNota = value!;
-          });
-        },
-        decoration: const InputDecoration(
-          border: OutlineInputBorder(),
-          labelText: 'Estado de la Nota',
-        ),
-      );
-    }
-    return const CircularProgressIndicator();
-  },
-),
+            BlocBuilder<CrearNotaBloc, CrearNotaState>(
+              builder: (context, state) {
+                if (state is CrearNotaInicial) {
+                  return DropdownButtonFormField<String>(
+                    value: _estadoNota,
+                    items: state.estadosNota
+                        .map((estado) => DropdownMenuItem<String>(
+                              value: estado,
+                              child: Text(estado),
+                            ))
+                        .toList(),
+                    onChanged: (value) {
+                      setState(() {
+                        _estadoNota = value!;
+                      });
+                    },
+                    decoration: const InputDecoration(
+                      border: OutlineInputBorder(),
+                      labelText: 'Estado de la Nota',
+                    ),
+                  );
+                }
+                return const CircularProgressIndicator();
+              },
+            ),
 
+    const SizedBox(height: 8.0),
 
-
-const SizedBox(height: 8.0),
-
-BlocBuilder<CrearNotaBloc, CrearNotaState>(
-  builder: (context, state) {
-    if (state is CrearNotaInicial) {
-      return DropdownButtonFormField<String>(
-        value: state.estadosPago.contains(_estadoPagoNota) ? _estadoPagoNota : null,
-        items: state.estadosPago.map((estado) {
-          return DropdownMenuItem<String>(
-            value: estado,
-            child: Text(estado),
+    BlocBuilder<CrearNotaBloc, CrearNotaState>(
+      builder: (context, state) {
+        if (state is CrearNotaInicial) {
+          return DropdownButtonFormField<String>(
+            value: state.estadosPago.contains(_estadoPagoNota) ? _estadoPagoNota : null,
+            items: state.estadosPago.map((estado) {
+              return DropdownMenuItem<String>(
+                value: estado,
+                child: Text(estado),
+              );
+            }).toList(),
+            onChanged: (value) {
+              setState(() {
+                _estadoPagoNota = value!;
+                if (_estadoPagoNota != 'Abono') {
+                  _abonoController.clear();
+                }
+              });
+            },
+            decoration: InputDecoration(
+              border: OutlineInputBorder(),
+              labelText: 'Estado de pago',
+              hintText: _prendas.isEmpty ? 'Agregue prendas primero' : null,
+            ),
           );
-        }).toList(),
-        onChanged: (value) {
-          setState(() {
-            _estadoPagoNota = value!;
-            // Si cambia a otro estado que no sea "Abono", limpiar el campo Abono.
-            if (_estadoPagoNota != 'Abono') {
-              _abonoController.clear();
-            }
-          });
-        },
-        decoration: InputDecoration(
-          border: OutlineInputBorder(),
-          labelText: 'Estado de pago',
-          hintText: _prendas.isEmpty ? 'Agregue prendas primero' : null,
-        ),
-      );
-    }
-    return const CircularProgressIndicator();
-  },
-),
+        }
+        return const CircularProgressIndicator();
+      },
+    ),
 
 
 Padding(
@@ -350,20 +345,18 @@ Padding(
   ),
 ),
 
-
-
-Padding(
-  padding: const EdgeInsets.symmetric(vertical: 8.0),
-  child: TextField(
-    controller: _importeTotalController,
-    enabled: false, 
-    keyboardType: TextInputType.number,
-    decoration: const InputDecoration(
-      border: OutlineInputBorder(),
-      labelText: 'Importe total',
-    ),
-  ),
-),
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8.0),
+          child: TextField(
+            controller: _importeTotalController,
+            enabled: false, 
+            keyboardType: TextInputType.number,
+            decoration: const InputDecoration(
+              border: OutlineInputBorder(),
+              labelText: 'Importe total',
+            ),
+          ),
+        ),
 
                               ],
                             ),

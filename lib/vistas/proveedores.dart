@@ -180,7 +180,7 @@ Widget _crearTablaProveedores(List<Map<String, dynamic>> proveedores) {
     child: DataTable(
       columnSpacing: 180.0,
       horizontalMargin: 60.0,
-      border: TableBorder.all(color: Colors.grey.shade300, borderRadius: BorderRadius.circular(10)),
+      border: TableBorder.all(color: const Color.fromARGB(255, 35, 46, 58), borderRadius: BorderRadius.circular(10)),
       headingRowColor: MaterialStateProperty.resolveWith<Color>(
           (states) => Colors.blueGrey.shade100),
       columns: const [

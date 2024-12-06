@@ -25,22 +25,34 @@ class _PrioridadesState extends State<Prioridades> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: _widgetOptions[_selectedIndex],
-      bottomNavigationBar: BottomNavigationBar(
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.calendar_today_outlined),
-            label: 'Tablero',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.calendar_month_outlined),
-            label: 'Calendario',
-          ),
-        ],
-        currentIndex: _selectedIndex,
-        onTap: _onItemTapped,
+return Scaffold(
+  body: _widgetOptions[_selectedIndex],
+  bottomNavigationBar: Container(
+    height: 80.0,
+    child: BottomNavigationBar(
+      items: const [
+        BottomNavigationBarItem(
+          icon: Icon(Icons.calendar_today_outlined),
+          label: 'Tablero',
+        ),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.calendar_month_outlined),
+          label: 'Calendario',
+        ),
+      ],
+      currentIndex: _selectedIndex,
+      onTap: _onItemTapped,
+      selectedLabelStyle: TextStyle(
+        fontSize: 18.0, 
+        fontWeight: FontWeight.bold,
       ),
-    );
+      unselectedLabelStyle: TextStyle(
+        fontSize: 16.0,
+      ),
+      iconSize: 30.0,
+    ),
+  ),
+);
+
   }
 }
