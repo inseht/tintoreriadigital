@@ -85,7 +85,7 @@ class _ProveedoresState extends State<Proveedores> {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-create: (_) => ProveedoresBloc()..add(ObtenerProveedores()),
+      create: (_) => ProveedoresBloc()..add(ObtenerProveedores()),
       child: Scaffold(
         body: Column(
           children: [
@@ -98,11 +98,14 @@ create: (_) => ProveedoresBloc()..add(ObtenerProveedores()),
                     proveedorSeleccionado = null;
                   });
                 },
-                child: Text(mostrarFormulario ? 'Cancelar' : 'Agregar Proveedor', style: TextStyle(fontSize: 30)),
-                style: ElevatedButton.styleFrom(
-                  shape: const StadiumBorder(),
-                  padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 15.0),
+                child: Text(
+                  mostrarFormulario ? 'Cancelar' : 'Agregar Proveedor',
+                  style: const TextStyle(fontSize: 24),
                 ),
+              style: ElevatedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 40), 
+                minimumSize: const Size(200, 70),
+              ),
               ),
             ),
             AnimatedCrossFade(
@@ -117,6 +120,7 @@ create: (_) => ProveedoresBloc()..add(ObtenerProveedores()),
                         labelText: 'Nombre del Proveedor',
                         border: OutlineInputBorder(),
                       ),
+                      style: const TextStyle(fontSize: 20),
                     ),
                     const SizedBox(height: 10),
                     TextField(
@@ -125,6 +129,7 @@ create: (_) => ProveedoresBloc()..add(ObtenerProveedores()),
                         labelText: 'Razón',
                         border: OutlineInputBorder(),
                       ),
+                      style: const TextStyle(fontSize: 20),
                     ),
                     const SizedBox(height: 10),
                     TextField(
@@ -133,6 +138,7 @@ create: (_) => ProveedoresBloc()..add(ObtenerProveedores()),
                         labelText: 'Contacto 1',
                         border: OutlineInputBorder(),
                       ),
+                      style: const TextStyle(fontSize: 20),
                     ),
                     const SizedBox(height: 10),
                     TextField(
@@ -141,11 +147,19 @@ create: (_) => ProveedoresBloc()..add(ObtenerProveedores()),
                         labelText: 'Contacto 2',
                         border: OutlineInputBorder(),
                       ),
+                      style: const TextStyle(fontSize: 20),
                     ),
                     const SizedBox(height: 20),
                     ElevatedButton(
                       onPressed: _agregarProveedor,
-                      child: Text(proveedorSeleccionado == null ? 'Guardar Proveedor' : 'Actualizar Proveedor', style: TextStyle(fontSize: 30)),
+                      child: Text(
+                        proveedorSeleccionado == null ? 'Guardar Proveedor' : 'Actualizar Proveedor',
+                        style: const TextStyle(fontSize: 24),
+                      ),
+              style: ElevatedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 40), 
+                minimumSize: const Size(200, 70),
+              ),
                     ),
                   ],
                 ),
@@ -161,9 +175,9 @@ create: (_) => ProveedoresBloc()..add(ObtenerProveedores()),
                   } else if (state is ProveedoresLoaded) {
                     return _crearTablaProveedores(state.proveedores);
                   } else if (state is ProveedoresError) {
-                    return Center(child: Text(state.error));
+                    return Center(child: Text(state.error, style: const TextStyle(fontSize: 24)));
                   } else {
-                    return const Center(child: Text('Sin datos'));
+                    return const Center(child: Text('Sin datos', style: TextStyle(fontSize: 24)));
                   }
                 },
               ),
@@ -174,62 +188,63 @@ create: (_) => ProveedoresBloc()..add(ObtenerProveedores()),
     );
   }
 
-Widget _crearTablaProveedores(List<Map<String, dynamic>> proveedores) {
-  return Padding(
-    padding: const EdgeInsets.all(20.0),
-    child: DataTable(
-      columnSpacing: 180.0,
-      horizontalMargin: 60.0,
-      border: TableBorder.all(color: const Color.fromARGB(255, 35, 46, 58), borderRadius: BorderRadius.circular(10)),
-      headingRowColor: MaterialStateProperty.resolveWith<Color>(
-          (states) => Colors.blueGrey.shade100),
-      columns: const [
-        DataColumn(
-          label: Text('ID', style: TextStyle(fontWeight: FontWeight.bold)),
-        ),
-        DataColumn(
-          label: Text('Nombre', style: TextStyle(fontWeight: FontWeight.bold)),
-        ),
-        DataColumn(
-          label: Text('Razón', style: TextStyle(fontWeight: FontWeight.bold)),
-        ),
-        DataColumn(
-          label: Text('Contacto 1', style: TextStyle(fontWeight: FontWeight.bold)),
-        ),
-        DataColumn(
-          label: Text('Contacto 2', style: TextStyle(fontWeight: FontWeight.bold)),
-        ),
-        DataColumn(
-          label: Text('Acciones', style: TextStyle(fontWeight: FontWeight.bold)),
-        ),
-      ],
-      rows: proveedores.map((proveedor) {
-        return DataRow(
-          cells: [
-            DataCell(Text(proveedor['idProveedor'].toString())),
-            DataCell(Text(proveedor['nombreProveedor'] ?? 'N/A')),
-            DataCell(Text(proveedor['razonProveedor'] ?? 'N/A')),
-            DataCell(Text(proveedor['contactoProveedor1'] ?? 'N/A')),
-            DataCell(Text(proveedor['contactoProveedor2'] ?? 'N/A')),
-            DataCell(
-              Row(
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.edit, color: Colors.blue),
-                    onPressed: () => _editarProveedor(proveedor),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.delete, color: Colors.red),
-                    onPressed: () => _eliminarProveedor(proveedor['idProveedor']),
-                  ),
-                ],
-              ),
+  Widget _crearTablaProveedores(List<Map<String, dynamic>> proveedores) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0), // Márgenes para no tocar bordes
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: DataTable(
+          columnSpacing: 120.0, // Más espacio entre columnas
+          headingRowHeight: 60.0,
+          dataRowHeight: 70.0,
+          border: TableBorder.all(color: Colors.grey, width: 1.5),
+          columns: const [
+            DataColumn(
+              label: Text('ID', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22)),
+            ),
+            DataColumn(
+              label: Text('Nombre', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22)),
+            ),
+            DataColumn(
+              label: Text('Razón', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22)),
+            ),
+            DataColumn(
+              label: Text('Contacto 1', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22)),
+            ),
+            DataColumn(
+              label: Text('Contacto 2', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22)),
+            ),
+            DataColumn(
+              label: Text('Acciones', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22)),
             ),
           ],
-        );
-      }).toList(),
-    ),
-  );
-}
-
+          rows: proveedores.map((proveedor) {
+            return DataRow(
+              cells: [
+                DataCell(Text(proveedor['idProveedor'].toString(), style: const TextStyle(fontSize: 20))),
+                DataCell(Text(proveedor['nombreProveedor'] ?? 'N/A', style: const TextStyle(fontSize: 20))),
+                DataCell(Text(proveedor['razonProveedor'] ?? 'N/A', style: const TextStyle(fontSize: 20))),
+                DataCell(Text(proveedor['contactoProveedor1'] ?? 'N/A', style: const TextStyle(fontSize: 20))),
+                DataCell(Text(proveedor['contactoProveedor2'] ?? 'N/A', style: const TextStyle(fontSize: 20))),
+                DataCell(
+                  Row(
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.edit, color: Colors.blue, size: 30),
+                        onPressed: () => _editarProveedor(proveedor),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.delete, color: Colors.red, size: 30),
+                        onPressed: () => _eliminarProveedor(proveedor['idProveedor']),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            );
+          }).toList(),
+        ),
+      ),
+    );
+  }
 }

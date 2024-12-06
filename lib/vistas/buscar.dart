@@ -1,20 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:tintoreriadigital/bd/bdmodel.dart';
-import 'package:tintoreriadigital/vistas/crearNota.dart';
 
 class Buscar extends StatefulWidget {
-  final Function(int) cambiarTab; // Declarar el parámetro cambiarTab
-
-  const Buscar({super.key, required this.cambiarTab});
-
   @override
   State<Buscar> createState() => _BuscarState();
 }
 
 class _BuscarState extends State<Buscar> {
-  final SearchController _controller = SearchController();
-  Map<String, List<Map<String, dynamic>>> datos = {};
-  Map<String, List<Map<String, dynamic>>> resultadosFiltrados = {};
+  final TextEditingController _controller = TextEditingController();
+  List<Map<String, dynamic>> notas = [];
+  List<Map<String, dynamic>> proveedores = [];
+  bool cargando = true;
 
   @override
   void initState() {
@@ -31,74 +27,73 @@ class _BuscarState extends State<Buscar> {
   }
 
   Future<void> _cargarDatos() async {
-    final resultados = await BdModel.obtenerDatosDeTodasLasTablas();
+    setState(() => cargando = true);
+
+    final todasNotas = await BdModel.obtenerNotas();
+    final todosProveedores = await BdModel.obtenerProveedores();
+
     setState(() {
-      datos = resultados;
-      resultadosFiltrados = {};
+      notas = todasNotas;
+      proveedores = todosProveedores;
+      cargando = false;
     });
   }
 
-  void _buscarTexto() {
-    String texto = _controller.text.toLowerCase().trim();
+  Future<void> _buscarTexto() async {
+    final filtro = _controller.text.trim().toLowerCase();
 
-    if (texto.isEmpty) {
+    if (filtro.isEmpty) {
+      await _cargarDatos(); // Si no hay texto, carga todos los datos
+    } else {
+      setState(() => cargando = true);
+
+      final notasFiltradas = await BdModel.obtenerNotasFiltradas(filtro);
+      final proveedoresFiltrados = await BdModel.obtenerProveedoresFiltrados(filtro);
+
       setState(() {
-        resultadosFiltrados = {};
+        notas = notasFiltradas;
+        proveedores = proveedoresFiltrados;
+        cargando = false;
       });
-      return;
+    }
+  }
+
+  Widget _buildItem(String titulo, List<Map<String, dynamic>> items) {
+    if (items.isEmpty) {
+      return Center(child: Text('No hay resultados en $titulo.'));
     }
 
-    Map<String, List<Map<String, dynamic>>> nuevosResultados = {};
-
-    datos.forEach((tabla, registros) {
-      List<Map<String, dynamic>> coincidencias = registros.where((registro) {
-        return registro.values.any((valor) =>
-            valor.toString().toLowerCase().contains(texto));
-      }).toList();
-
-      if (coincidencias.isNotEmpty) {
-        nuevosResultados[tabla] = coincidencias;
-      }
-    });
-
-    setState(() {
-      resultadosFiltrados = nuevosResultados;
-    });
-  }
-
-  Widget _buildItem(Map<String, dynamic> item) {
-    return GestureDetector(
-      onTap: () {
-        // Cambiar de pestaña a Crear Nota
-        widget.cambiarTab(2); // Llama a cambiarTab con el índice de la pestaña
-      },
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: item.entries.map((entry) {
-          return Padding(
-            padding: const EdgeInsets.symmetric(vertical: 4.0),
-            child: Row(
-              children: [
-                Text(
-                  "${entry.key}: ",
+return ListView.builder(
+  itemCount: items.length,
+  itemBuilder: (context, index) {
+    final item = items[index];
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 10.0), // Margen alrededor de las tarjetas
+      child: Card(
+        elevation: 5,
+        child: Padding(
+          padding: const EdgeInsets.all(15.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: item.entries.map((entry) {
+              return Padding(
+                padding: const EdgeInsets.symmetric(vertical: 4.0),
+                child: Text(
+                  "${entry.key}: ${entry.value}",
                   style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black87,
+                    fontSize: 18, // Texto más grande
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
-                Expanded(
-                  child: Text(
-                    entry.value.toString(),
-                    style: const TextStyle(color: Colors.black54),
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-              ],
-            ),
-          );
-        }).toList(),
+              );
+            }).toList(),
+          ),
+        ),
       ),
     );
+  },
+);
+
   }
 
   @override
@@ -108,83 +103,56 @@ class _BuscarState extends State<Buscar> {
         padding: const EdgeInsets.all(10.0),
         child: Column(
           children: [
-            SearchBar(
+            TextField(
               controller: _controller,
-              padding: const WidgetStatePropertyAll<EdgeInsets>(EdgeInsets.symmetric(horizontal: 16.0)),
-              leading: const Icon(Icons.search),
+              decoration: const InputDecoration(
+                labelText: 'Buscar',
+                border: OutlineInputBorder(),
+                prefixIcon: Icon(Icons.search),
+              ),
             ),
             const SizedBox(height: 20),
-            Expanded(
-              child: _controller.text.isEmpty
-                  ? const Center(child: Text(''))
-                  : resultadosFiltrados.isEmpty
-                      ? const Center(child: Text('No hay resultados'))
-                      : Row(
-                          children: [
-                            // Columna de proveedores
-                            Expanded(
-                              child: ListView(
-                                children: resultadosFiltrados.containsKey('proveedores')
-                                    ? [
-                                        Text(
-                                          'Proveedores',
-                                          style: TextStyle(
-                                            fontSize: 20,
-                                            fontWeight: FontWeight.bold,
-                                            color: Theme.of(context).primaryColor,
-                                          ),
-                                        ),
-                                        const SizedBox(height: 10),
-                                        ...resultadosFiltrados['proveedores']!.map((item) {
-                                          return Card(
-                                            margin: const EdgeInsets.symmetric(vertical: 8.0),
-                                            elevation: 5,
-                                            child: Padding(
-                                              padding: const EdgeInsets.all(10.0),
-                                              child: _buildItem(item),
-                                            ),
-                                          );
-                                        }).toList(),
-                                      ]
-                                    : [
-                                        const Center(child: Text('No hay proveedores')),
-                                      ],
+            cargando
+                ? const Center(child: CircularProgressIndicator())
+                : Expanded(
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                'Notas',
+                                style: TextStyle(
+                                  fontSize: 22,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
-                            ),
-                            const VerticalDivider(width: 1),
-                            // Columna de notas
-                            Expanded(
-                              child: ListView(
-                                children: resultadosFiltrados.containsKey('notas')
-                                    ? [
-                                        Text(
-                                          'Notas',
-                                          style: TextStyle(
-                                            fontSize: 20,
-                                            fontWeight: FontWeight.bold,
-                                            color: Theme.of(context).primaryColor,
-                                          ),
-                                        ),
-                                        const SizedBox(height: 10),
-                                        ...resultadosFiltrados['notas']!.map((item) {
-                                          return Card(
-                                            margin: const EdgeInsets.symmetric(vertical: 8.0),
-                                            elevation: 5,
-                                            child: Padding(
-                                              padding: const EdgeInsets.all(10.0),
-                                              child: _buildItem(item),
-                                            ),
-                                          );
-                                        }).toList(),
-                                      ]
-                                    : [
-                                        const Center(child: Text('No hay notas')),
-                                      ],
-                              ),
-                            ),
-                          ],
+                              const Divider(),
+                              Expanded(child: _buildItem('Notas', notas)),
+                            ],
+                          ),
                         ),
-            ),
+                        const VerticalDivider(width: 1),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                'Proveedores',
+                                style: TextStyle(
+                                  fontSize: 22,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              const Divider(),
+                              Expanded(child: _buildItem('Proveedores', proveedores)),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
           ],
         ),
       ),

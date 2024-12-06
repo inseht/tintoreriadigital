@@ -210,7 +210,7 @@ void _crearNota() {
                           children: [
                             const Text(
                               'Información general',
-                              style: TextStyle(fontSize: 16.0),
+                              style: TextStyle(fontSize: 19.0),
                             ),
                             const SizedBox(height: 16.0),
                             Column(
@@ -243,6 +243,7 @@ void _crearNota() {
                                       ElevatedButton(
                                         onPressed: () => _mostrarDatePicker(context),
                                         child: const Text('Seleccionar fechas'),
+                                        
                                       ),
                                       const SizedBox(width: 10),
                                       Text(
@@ -393,7 +394,7 @@ Padding(
                           children: [
                             const Text(
                               'Prendas',
-                              style: TextStyle(fontSize: 16.0),
+                              style: TextStyle(fontSize: 19.0),
                             ),
                             const SizedBox(height: 8.0),
                             Column(
@@ -517,9 +518,10 @@ Center(
   child: ElevatedButton(
     onPressed: _agregarPrenda,
     child: const Text('Agregar prenda'),
-    style: ElevatedButton.styleFrom(
-      minimumSize: const Size(200, 50),
-    ),
+              style: ElevatedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 40), 
+                minimumSize: const Size(200, 70),
+              ),
   ),
 ),
 const SizedBox(height: 16.0),

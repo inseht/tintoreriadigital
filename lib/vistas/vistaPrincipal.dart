@@ -96,7 +96,7 @@ class _MainViewState extends State<MainView> with SingleTickerProviderStateMixin
         controller: _tabController,
         children: [
           const Prioridades(),
-          Buscar(cambiarTab: _cambiarTab), // Pasar _cambiarTab aquí
+          Buscar(), // Pasar _cambiarTab aquí
           const CrearNota(),
           const Proveedores(),
         ],

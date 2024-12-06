@@ -61,6 +61,30 @@ class BdModel {
     return db;
   }
 
+    // Método para obtener notas filtradas por texto
+  static Future<List<Map<String, dynamic>>> obtenerNotasFiltradas(String filtro) async {
+    final db = await inicializarBD();
+    final List<Map<String, dynamic>> notas = await db.query(
+      'Notas',
+      where: 'nombreCliente LIKE ? OR telefonoCliente LIKE ? OR estado LIKE ?',
+      whereArgs: ['%$filtro%', '%$filtro%', '%$filtro%'],
+    );
+    await db.close();
+    return notas;
+  }
+
+  // Método para obtener proveedores filtrados por texto
+  static Future<List<Map<String, dynamic>>> obtenerProveedoresFiltrados(String filtro) async {
+    final db = await inicializarBD();
+    final List<Map<String, dynamic>> proveedores = await db.query(
+      'Proveedores',
+      where: 'nombreProveedor LIKE ? OR razonProveedor LIKE ? OR contactoProveedor1 LIKE ?',
+      whereArgs: ['%$filtro%', '%$filtro%', '%$filtro%'],
+    );
+    await db.close();
+    return proveedores;
+  }
+
   static Future<void> crearNotaConPrendas(Map<String, dynamic> nota, List<Map<String, dynamic>> prendas) async {
     final db = await inicializarBD();
     final dateFormat = DateFormat('dd/MM/yyyy');
