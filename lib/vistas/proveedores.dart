@@ -98,14 +98,14 @@ class _ProveedoresState extends State<Proveedores> {
                     proveedorSeleccionado = null;
                   });
                 },
-                child: Text(
-                  mostrarFormulario ? 'Cancelar' : 'Agregar Proveedor',
-                  style: const TextStyle(fontSize: 24),
-                ),
               style: ElevatedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 40), 
                 minimumSize: const Size(200, 70),
               ),
+                child: Text(
+                  mostrarFormulario ? 'Cancelar' : 'Agregar Proveedor',
+                  style: const TextStyle(fontSize: 24),
+                ),
               ),
             ),
             AnimatedCrossFade(
@@ -152,14 +152,14 @@ class _ProveedoresState extends State<Proveedores> {
                     const SizedBox(height: 20),
                     ElevatedButton(
                       onPressed: _agregarProveedor,
-                      child: Text(
-                        proveedorSeleccionado == null ? 'Guardar Proveedor' : 'Actualizar Proveedor',
-                        style: const TextStyle(fontSize: 24),
-                      ),
               style: ElevatedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 40), 
                 minimumSize: const Size(200, 70),
               ),
+                      child: Text(
+                        proveedorSeleccionado == null ? 'Guardar Proveedor' : 'Actualizar Proveedor',
+                        style: const TextStyle(fontSize: 24),
+                      ),
                     ),
                   ],
                 ),

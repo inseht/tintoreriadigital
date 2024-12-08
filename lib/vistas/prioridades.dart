@@ -13,7 +13,7 @@ class _PrioridadesState extends State<Prioridades> {
   int _selectedIndex = 0;
 
   final List<Widget> _widgetOptions = [
-    const prioridadesBoard(),
+     prioridadesBoard(),
     const prioridadesCalendario(),
   ];
 
@@ -27,7 +27,7 @@ class _PrioridadesState extends State<Prioridades> {
   Widget build(BuildContext context) {
 return Scaffold(
   body: _widgetOptions[_selectedIndex],
-  bottomNavigationBar: Container(
+  bottomNavigationBar: SizedBox(
     height: 80.0,
     child: BottomNavigationBar(
       items: const [

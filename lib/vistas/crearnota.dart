@@ -9,7 +9,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 class CrearNota extends StatefulWidget {
   final Map<String, dynamic>? nota;
 
-  const CrearNota({Key? key, this.nota}) : super(key: key);
+  const CrearNota({super.key, this.nota});
 
   @override
   State<CrearNota> createState() => _CrearNotaState();
@@ -34,7 +34,7 @@ class _CrearNotaState extends State<CrearNota> {
   String? _color;
 
   int _cantidadPrendas = 1;
-  List<Map<String, dynamic>> _prendas = [];
+  final List<Map<String, dynamic>> _prendas = [];
 
 void _limpiarFormulario() {
   _nombreController.clear();
@@ -517,11 +517,11 @@ Padding(
 Center(
   child: ElevatedButton(
     onPressed: _agregarPrenda,
-    child: const Text('Agregar prenda'),
               style: ElevatedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 40), 
                 minimumSize: const Size(200, 70),
               ),
+    child: const Text('Agregar prenda'),
   ),
 ),
 const SizedBox(height: 16.0),
@@ -572,13 +572,13 @@ if (_prendas.isNotEmpty)
           Center(
             child: ElevatedButton(
               onPressed: _crearNota,
-              child: const Text(
-                'Crear nota',
-                style: TextStyle(fontSize: 30), 
-              ),
               style: ElevatedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 40), 
                 minimumSize: const Size(200, 70),
+              ),
+              child: const Text(
+                'Crear nota',
+                style: TextStyle(fontSize: 30), 
               ),
             ),
           ),

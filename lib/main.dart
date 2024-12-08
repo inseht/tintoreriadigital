@@ -55,7 +55,7 @@ class MainApp extends StatelessWidget {
               home: const MainView(),
               routes: {
                 '/proveedores': (context) => const Proveedores(),
-                '/prioridades': (context) => const prioridadesBoard(),
+                '/prioridades': (context) =>  prioridadesBoard(),
               },
             );
           },

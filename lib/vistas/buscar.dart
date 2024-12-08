@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:tintoreriadigital/bd/bdmodel.dart';
 
 class Buscar extends StatefulWidget {
+  const Buscar({super.key});
+
   @override
   State<Buscar> createState() => _BuscarState();
 }
@@ -43,7 +45,7 @@ class _BuscarState extends State<Buscar> {
     final filtro = _controller.text.trim().toLowerCase();
 
     if (filtro.isEmpty) {
-      await _cargarDatos(); // Si no hay texto, carga todos los datos
+      await _cargarDatos();
     } else {
       setState(() => cargando = true);
 
@@ -58,42 +60,52 @@ class _BuscarState extends State<Buscar> {
     }
   }
 
-  Widget _buildItem(String titulo, List<Map<String, dynamic>> items) {
+  Widget _buildItem(String titulo, List<Map<String, dynamic>> items, IconData icon) {
     if (items.isEmpty) {
-      return Center(child: Text('No hay resultados en $titulo.'));
+      return Center(
+        child: Text(
+          'No hay resultados en $titulo.',
+          style: const TextStyle(fontSize: 16, fontStyle: FontStyle.italic),
+        ),
+      );
     }
 
-return ListView.builder(
-  itemCount: items.length,
-  itemBuilder: (context, index) {
-    final item = items[index];
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 10.0), // Margen alrededor de las tarjetas
-      child: Card(
-        elevation: 5,
-        child: Padding(
-          padding: const EdgeInsets.all(15.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: item.entries.map((entry) {
-              return Padding(
-                padding: const EdgeInsets.symmetric(vertical: 4.0),
-                child: Text(
-                  "${entry.key}: ${entry.value}",
-                  style: const TextStyle(
-                    fontSize: 18, // Texto más grande
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              );
-            }).toList(),
-          ),
-        ),
-      ),
-    );
-  },
-);
+    return ListView.builder(
+      itemCount: items.length,
+      itemBuilder: (context, index) {
+        final item = items[index];
+        final keys = item.keys.toList();
 
+        // Usamos un campo clave como título y otro como subtítulo
+        final String title = item[keys[0]].toString();
+        final String subtitle = keys.length > 1 ? item[keys[1]].toString() : "";
+
+        return Padding(
+          padding: const EdgeInsets.symmetric(vertical: 6.0, horizontal: 10.0),
+          child: Card(
+            elevation: 3,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            child: ListTile(
+              leading: Icon(icon, size: 36, color: Colors.blueAccent),
+              title: Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              subtitle: Text(
+                subtitle,
+                style: const TextStyle(
+                  fontSize: 14,
+                  color: Colors.grey,
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
   }
 
   @override
@@ -129,7 +141,7 @@ return ListView.builder(
                                 ),
                               ),
                               const Divider(),
-                              Expanded(child: _buildItem('Notas', notas)),
+                              Expanded(child: _buildItem('Notas', notas, Icons.note)),
                             ],
                           ),
                         ),
@@ -146,7 +158,7 @@ return ListView.builder(
                                 ),
                               ),
                               const Divider(),
-                              Expanded(child: _buildItem('Proveedores', proveedores)),
+                              Expanded(child: _buildItem('Proveedores', proveedores, Icons.store)),
                             ],
                           ),
                         ),

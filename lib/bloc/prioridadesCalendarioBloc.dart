@@ -53,7 +53,7 @@ class CalendarioBloc extends Bloc<CalendarioEvent, CalendarioState> {
 class CalendarioWidget extends StatelessWidget {
   final Map<DateTime, List<Map<String, dynamic>>> eventos;
 
-  CalendarioWidget({required this.eventos});
+  const CalendarioWidget({super.key, required this.eventos});
 
   @override
   Widget build(BuildContext context) {
