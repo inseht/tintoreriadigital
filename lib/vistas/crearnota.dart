@@ -115,17 +115,19 @@ void _agregarPrenda() {
         'tipo': _tipoPrendaSeleccionada,
         'servicio': _servicioSeleccionado,
         'precioUnitario': precioUnitario,
-        'colores': _color,
+        'colores': _color, // Guardar el color seleccionado.
         'cantidad': _cantidadPrendas,
       });
 
       double importeTotalActual = double.tryParse(_importeTotalController.text) ?? 0.0;
       _importeTotalController.text = (importeTotalActual + precioUnitario * _cantidadPrendas).toStringAsFixed(2);
 
+      // Limpiar los campos relacionados con la prenda.
       _tipoPrendaSeleccionada = null;
       _servicioSeleccionado = null;
       _cantidadPrendas = 1; 
       _precioUnitarioController.clear();
+      _color = null; // Limpiar selección de color.
     });
   } else {
     ScaffoldMessenger.of(context).showSnackBar(
@@ -133,7 +135,6 @@ void _agregarPrenda() {
     );
   }
 }
-
 
 void _crearNota() {
   if (_fechaInicio == null || _fechaFin == null || _nombreController.text.trim().isEmpty || _telefonoController.text.trim().isEmpty) {
@@ -150,16 +151,14 @@ void _crearNota() {
     return;
   }
 
-  double importeFinal = (_estadoPagoNota == 'Pagado')
-      ? double.tryParse(_importeTotalController.text) ?? 0.0
-      : _prendas.fold<double>(0.0, (sum, prenda) => sum + (prenda['subtotal'] ?? 0.0));
+  double importeFinal = double.tryParse(_importeTotalController.text) ?? 0.0;
 
   final Map<String, dynamic> nota = {
     'nombreCliente': _nombreController.text,
     'telefonoCliente': _telefonoController.text,
     'fechaRecibido': _fechaInicio,
     'fechaEstimada': _fechaFin,
-    'importe': importeFinal,
+    'importe': importeFinal, // Guardar el importe calculado.
     'estadoPago': _estadoPagoNota,
     'prioridad': 1,
     'observaciones': _observacionesController.text,
@@ -170,6 +169,7 @@ void _crearNota() {
 
   _limpiarFormulario();
 }
+
 
 
 
