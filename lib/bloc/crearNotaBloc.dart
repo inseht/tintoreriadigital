@@ -99,9 +99,16 @@ class ActualizarPrenda extends CrearNotaEvent {
   ActualizarPrenda({required this.idPrenda, required this.nuevaPrenda});
 }
 
+
+
 class CargarNotasConPrendas extends CrearNotaEvent {}
 
-// b
+class AsignarPrendasNoAsignadas extends CrearNotaEvent {}
+
+
+
+// Bloc
+// Bloc
 class CrearNotaBloc extends Bloc<CrearNotaEvent, CrearNotaState> {
   CrearNotaBloc() : super(CrearNotaInicial()) {
     on<ValidarFormulario>(_onValidarFormulario);
@@ -111,6 +118,7 @@ class CrearNotaBloc extends Bloc<CrearNotaEvent, CrearNotaState> {
     on<ActualizarNota>(_onActualizarNota);
     on<ActualizarPrenda>(_onActualizarPrenda);
     on<CargarNotasConPrendas>(_onCargarNotasConPrendas);
+    on<AsignarPrendasNoAsignadas>(_onAsignarPrendasNoAsignadas);
   }
 
   void _onValidarFormulario(ValidarFormulario event, Emitter<CrearNotaState> emit) {
@@ -126,17 +134,51 @@ class CrearNotaBloc extends Bloc<CrearNotaEvent, CrearNotaState> {
   }
 
 Future<void> _onEnviarFormulario(EnviarFormulario event, Emitter<CrearNotaState> emit) async {
-  emit(CrearPrendaInProgress());
   try {
+    if (event.prendas.isEmpty) {
+      emit(FormularioInvalido('Debe agregar al menos una prenda.'));
+      return;
+    }
+    // Insertar la nota con las prendas
     await BdModel.crearNotaConPrendas(event.nota, event.prendas);
-    emit(FormularioEnviado()); 
-    emit(CrearNotaInicial());
+    
+    // Asignar prendas no asignadas si es necesario
+    add(AsignarPrendasNoAsignadas());
+    
+    emit(FormularioEnviado());
   } catch (e) {
     emit(FormularioInvalido('Error al guardar la nota: $e'));
-    emit(CrearNotaInicial()); 
   }
 }
 
+  // Future<void> _onEnviarFormulario(EnviarFormulario event, Emitter<CrearNotaState> emit) async {
+  //   emit(CrearPrendaInProgress());
+  //   try {
+  //     // Insertar la nota y las prendas en la base de datos
+  //     await BdModel.crearNotaConPrendas(event.nota, event.prendas);
+      
+  //     // Llamar a evento para asignar prendas no asignadas, si es necesario
+  //     add(AsignarPrendasNoAsignadas());
+      
+  //     // Emitir estado de éxito
+  //     emit(FormularioEnviado());
+  //   } catch (e) {
+  //     emit(FormularioInvalido('Error al guardar la nota: $e'));
+  //   }
+  // }
+
+
+  Future<void> _onAsignarPrendasNoAsignadas(AsignarPrendasNoAsignadas event, Emitter<CrearNotaState> emit) async {
+    emit(CrearPrendaInProgress());
+    try {
+      // Llamar a BdModel para asignar prendas no asignadas
+      await BdModel.asignarPrendasNoAsignadasALaUltimaNota();
+      
+      emit(CrearPrendaSuccess());
+    } catch (e) {
+      emit(CrearPrendaFailure('Error al asignar prendas no asignadas: $e'));
+    }
+  }
 
   Future<void> _onCrearPrendaSubmitted(CrearPrendaSubmitted event, Emitter<CrearNotaState> emit) async {
     emit(CrearPrendaInProgress());
@@ -151,45 +193,20 @@ Future<void> _onEnviarFormulario(EnviarFormulario event, Emitter<CrearNotaState>
   Future<void> _onEliminarNota(EliminarNota event, Emitter<CrearNotaState> emit) async {
     try {
       await BdModel.eliminarNota(event.idNota);
-      emit(FormularioEnviado()); 
+      emit(FormularioEnviado());
     } catch (e) {
       emit(FormularioInvalido('Error al eliminar la nota: $e'));
     }
   }
-Future<void> _onActualizarNota(ActualizarNota event, Emitter<CrearNotaState> emit) async {
-  try {
 
-    final db = await BdModel.inicializarBD();
-    final resultado = await db.query(
-      'Notas', 
-      where: 'idNota = ?', 
-      whereArgs: [event.idNota],
-      limit: 1, 
-    );
-
-    if (resultado.isEmpty) {
-      throw Exception('Nota no encontrada');
+  Future<void> _onActualizarNota(ActualizarNota event, Emitter<CrearNotaState> emit) async {
+    try {
+      await BdModel.actualizarNota(event.idNota, event.nuevaNota);
+      emit(FormularioEnviado());
+    } catch (e) {
+      emit(FormularioInvalido('Error al actualizar la nota: $e'));
     }
-
-    final notaActual = resultado.first; 
-    final nuevaNota = Map<String, dynamic>.from(event.nuevaNota);
-
-    if (nuevaNota['estadoPago'] == 'Pagado' && (nuevaNota['importe'] == null || nuevaNota['importe'].isEmpty)) {
-      nuevaNota['importe'] = notaActual['importe']; 
-    }
-
-    await db.update(
-      'Notas',
-      nuevaNota,
-      where: 'idNota = ?', 
-      whereArgs: [event.idNota],
-    );
-
-    emit(FormularioEnviado()); 
-  } catch (e) {
-    emit(FormularioInvalido('Error al actualizar la nota: $e'));
   }
-}
 
   Future<void> _onActualizarPrenda(ActualizarPrenda event, Emitter<CrearNotaState> emit) async {
     try {
@@ -208,4 +225,5 @@ Future<void> _onActualizarNota(ActualizarNota event, Emitter<CrearNotaState> emi
       emit(FormularioInvalido('Error al cargar notas: $e'));
     }
   }
+
 }
