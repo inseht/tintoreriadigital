@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:syncfusion_flutter_datepicker/datepicker.dart';
 import 'package:intl/intl.dart';
-import 'package:tintoreriadigital/bd/bdmodel.dart';
 import 'package:tintoreriadigital/bloc/crearNotaBloc.dart';
 import 'package:roundcheckbox/roundcheckbox.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';

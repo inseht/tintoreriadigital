@@ -115,14 +115,22 @@ class _BuscarState extends State<Buscar> {
         padding: const EdgeInsets.all(10.0),
         child: Column(
           children: [
-            TextField(
-              controller: _controller,
-              decoration: const InputDecoration(
-                labelText: 'Buscar',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.search),
-              ),
-            ),
+TextField(
+  controller: _controller,
+  decoration: InputDecoration(
+    labelText: 'Buscar',
+    border: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(8.0),
+      borderSide: BorderSide(
+        color: Colors.grey[100]!, // Gris más claro para el borde
+        width: 1.0, // Grosor del borde
+      ),
+    ),
+    prefixIcon: Icon(Icons.search),
+    filled: true, // Activa el fondo
+    fillColor: Color(0xFFF5F5F5), // Color gris claro para el fondo
+  ),
+),
             const SizedBox(height: 20),
             cargando
                 ? const Center(child: CircularProgressIndicator())

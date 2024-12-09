@@ -11,6 +11,7 @@ import 'bloc/proveedoresBloc.dart';
 import 'bloc/prioridadesBloc.dart';
 import 'bloc/crearNotaBloc.dart';
 import 'bloc/prioridadesCalendarioBloc.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 
 void main() {
   runApp(const MainApp());
@@ -57,6 +58,15 @@ class MainApp extends StatelessWidget {
                 '/proveedores': (context) => const Proveedores(),
                 '/prioridades': (context) =>  prioridadesBoard(),
               },
+              localizationsDelegates: const [
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      supportedLocales: const [
+        Locale('es', 'ES'), // Español
+      ],
+      locale: const Locale('es', 'ES'), 
             );
           },
         ),

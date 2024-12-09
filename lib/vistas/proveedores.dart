@@ -196,7 +196,6 @@ class _ProveedoresState extends State<Proveedores> {
         child: DataTable(
           columnSpacing: 120.0, // Más espacio entre columnas
           headingRowHeight: 60.0,
-          dataRowHeight: 70.0,
           border: TableBorder.all(color: Colors.grey, width: 1.5),
           columns: const [
             DataColumn(
