@@ -75,7 +75,7 @@ class PrioridadesCalendarioState extends State<prioridadesCalendario> {
       shape: BoxShape.circle,
     ),
     todayDecoration: BoxDecoration(
-      color: Color.fromARGB(255, 159, 187, 249),
+      color: Color.fromARGB(255, 139, 162, 210),
       shape: BoxShape.circle,
     ),
   ),

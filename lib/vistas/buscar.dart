@@ -60,53 +60,71 @@ class _BuscarState extends State<Buscar> {
     }
   }
 
-  Widget _buildItem(String titulo, List<Map<String, dynamic>> items, IconData icon) {
-    if (items.isEmpty) {
-      return Center(
-        child: Text(
-          'No hay resultados en $titulo.',
-          style: const TextStyle(fontSize: 16, fontStyle: FontStyle.italic),
-        ),
-      );
+Widget _buildItem(String titulo, List<Map<String, dynamic>> items, IconData icon) {
+  if (items.isEmpty) {
+    return Center(
+      child: Text(
+        'No hay resultados en $titulo.',
+        style: const TextStyle(fontSize: 16, fontStyle: FontStyle.italic),
+      ),
+    );
+  }
+
+  return ListView.builder(
+    itemCount: items.length,
+    itemBuilder: (context, index) {
+      final item = items[index];
+      
+    final String idNota = item['idNota']?.toString() ?? "Desconocido";
+    final String nombreCliente = item['nombreCliente']?.toString() ?? "Sin Nombre";
+
+
+    final String idProveedor = item['idProveedor']?.toString() ?? "Desconocido";
+    final String nombreProveedor = item['nombreProveedor']?.toString() ?? "Sin Nombre";
+
+    String title;
+    String subtitle;
+
+    if (item.containsKey('idNota') && item.containsKey('nombreCliente')) {
+      title = "Nota #$idNota";
+      subtitle = "Nombre del cliente: $nombreCliente";
+    } else if (item.containsKey('idProveedor') && item.containsKey('nombreProveedor')) {
+
+      title = "Proveedor #$idProveedor";
+      subtitle = "Nombre del proveedor: $nombreProveedor";
+    } else {
+      title = "Desconocido";
+      subtitle = "Información no disponible";
     }
 
-    return ListView.builder(
-      itemCount: items.length,
-      itemBuilder: (context, index) {
-        final item = items[index];
-        final keys = item.keys.toList();
-
-        // Usamos un campo clave como título y otro como subtítulo
-        final String title = item[keys[0]].toString();
-        final String subtitle = keys.length > 1 ? item[keys[1]].toString() : "";
-
-        return Padding(
-          padding: const EdgeInsets.symmetric(vertical: 6.0, horizontal: 10.0),
-          child: Card(
-            elevation: 3,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-            child: ListTile(
-              leading: Icon(icon, size: 36, color: Colors.blueAccent),
-              title: Text(
-                title,
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
-                ),
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 6.0, horizontal: 10.0),
+        child: Card(
+          elevation: 3,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          child: ListTile(
+            leading: Icon(icon, size: 36, color: Color.fromARGB(255, 72, 100, 122)),
+            title: Text(
+              title,
+              style: const TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
               ),
-              subtitle: Text(
-                subtitle,
-                style: const TextStyle(
-                  fontSize: 14,
-                  color: Colors.grey,
-                ),
+            ),
+            subtitle: Text(
+              subtitle,
+              style: const TextStyle(
+                fontSize: 14,
+                color: Colors.grey,
               ),
             ),
           ),
-        );
-      },
-    );
-  }
+        ),
+      );
+    },
+  );
+}
+
 
   @override
   Widget build(BuildContext context) {

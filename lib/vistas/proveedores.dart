@@ -98,10 +98,10 @@ class _ProveedoresState extends State<Proveedores> {
                     proveedorSeleccionado = null;
                   });
                 },
-              style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 40), 
-                minimumSize: const Size(200, 70),
-              ),
+                style: ElevatedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 40),
+                  minimumSize: const Size(200, 70),
+                ),
                 child: Text(
                   mostrarFormulario ? 'Cancelar' : 'Agregar Proveedor',
                   style: const TextStyle(fontSize: 24),
@@ -152,10 +152,10 @@ class _ProveedoresState extends State<Proveedores> {
                     const SizedBox(height: 20),
                     ElevatedButton(
                       onPressed: _agregarProveedor,
-              style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 40), 
-                minimumSize: const Size(200, 70),
-              ),
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 40),
+                        minimumSize: const Size(200, 70),
+                      ),
                       child: Text(
                         proveedorSeleccionado == null ? 'Guardar Proveedor' : 'Actualizar Proveedor',
                         style: const TextStyle(fontSize: 24),
@@ -190,58 +190,55 @@ class _ProveedoresState extends State<Proveedores> {
 
   Widget _crearTablaProveedores(List<Map<String, dynamic>> proveedores) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0), // Márgenes para no tocar bordes
+      padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
       child: SingleChildScrollView(
         scrollDirection: Axis.horizontal,
-        child: DataTable(
-          columnSpacing: 120.0, // Más espacio entre columnas
-          headingRowHeight: 60.0,
-          border: TableBorder.all(color: Colors.grey, width: 1.5),
-          columns: const [
-            DataColumn(
-              label: Text('ID', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22)),
-            ),
-            DataColumn(
-              label: Text('Nombre', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22)),
-            ),
-            DataColumn(
-              label: Text('Razón', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22)),
-            ),
-            DataColumn(
-              label: Text('Contacto 1', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22)),
-            ),
-            DataColumn(
-              label: Text('Contacto 2', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22)),
-            ),
-            DataColumn(
-              label: Text('Acciones', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22)),
-            ),
-          ],
-          rows: proveedores.map((proveedor) {
-            return DataRow(
-              cells: [
-                DataCell(Text(proveedor['idProveedor'].toString(), style: const TextStyle(fontSize: 20))),
-                DataCell(Text(proveedor['nombreProveedor'] ?? 'N/A', style: const TextStyle(fontSize: 20))),
-                DataCell(Text(proveedor['razonProveedor'] ?? 'N/A', style: const TextStyle(fontSize: 20))),
-                DataCell(Text(proveedor['contactoProveedor1'] ?? 'N/A', style: const TextStyle(fontSize: 20))),
-                DataCell(Text(proveedor['contactoProveedor2'] ?? 'N/A', style: const TextStyle(fontSize: 20))),
-                DataCell(
-                  Row(
-                    children: [
-                      IconButton(
-                        icon: const Icon(Icons.edit, color: Colors.blue, size: 30),
-                        onPressed: () => _editarProveedor(proveedor),
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.delete, color: Colors.red, size: 30),
-                        onPressed: () => _eliminarProveedor(proveedor['idProveedor']),
-                      ),
-                    ],
-                  ),
-                ),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            bool isLargeScreen = constraints.maxWidth > 600; // Define a threshold for large screens
+            return DataTable(
+              columnSpacing: isLargeScreen ? 120.0 : 60.0, // Adjust spacing based on screen size
+              headingRowHeight: 60.0,
+              border: TableBorder.all(color: Colors.grey, width: 1.5),
+              columns: [
+                const DataColumn(label: Text('ID', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22))),
+                const DataColumn(label: Text('Nombre', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22))),
+                if (isLargeScreen)
+                  const DataColumn(label: Text('Razón', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22))),
+                const DataColumn(label: Text('Contacto 1', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22))),
+                if (isLargeScreen)
+                  const DataColumn(label: Text('Contacto 2', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22))),
+                const DataColumn(label: Text('Acciones', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22))),
               ],
+              rows: proveedores.map((proveedor) {
+                return DataRow(
+                  cells: [
+                    DataCell(Text(proveedor['idProveedor'].toString(), style: const TextStyle(fontSize: 20))),
+                    DataCell(Text(proveedor['nombreProveedor'] ?? 'N/A', style: const TextStyle(fontSize: 20))),
+                    if (isLargeScreen)
+                      DataCell(Text(proveedor['razonProveedor'] ?? 'N/A', style: const TextStyle(fontSize: 20))),
+                    DataCell(Text(proveedor['contactoProveedor1'] ?? 'N/A', style: const TextStyle(fontSize: 20))),
+                    if (isLargeScreen)
+                      DataCell(Text(proveedor['contactoProveedor2'] ?? 'N/A', style: const TextStyle(fontSize: 20))),
+                    DataCell(
+                      Row(
+                        children: [
+                          IconButton(
+                            icon: const Icon(Icons.edit, color: Colors.blue, size: 30),
+                            onPressed: () => _editarProveedor(proveedor),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.delete, color: Colors.red, size: 30),
+                            onPressed: () => _eliminarProveedor(proveedor['idProveedor']),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                );
+              }).toList(),
             );
-          }).toList(),
+          },
         ),
       ),
     );

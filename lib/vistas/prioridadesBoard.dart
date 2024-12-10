@@ -9,7 +9,7 @@ class prioridadesBoard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (context) => PrioridadesBloc()..add(CargarNotasEvent()), // Inicializa y carga notas
+      create: (context) => PrioridadesBloc()..add(CargarNotasEvent()), 
       child: Scaffold(
         body: BlocBuilder<PrioridadesBloc, PrioridadesState>(
           builder: (context, state) {
@@ -17,14 +17,12 @@ class prioridadesBoard extends StatelessWidget {
               if (state.notas.isEmpty) {
                 return const Center(child: Text('No hay notas con prioridad.'));
               }
-
-              // Mostrar las notas en una grilla
               return Padding(
-                padding: const EdgeInsets.only(top: 16.0), // Margen superior
+                padding: const EdgeInsets.only(top: 16.0), 
                 child: MasonryGridView.count(
-                  crossAxisCount: 2, // Número de columnas
-                  mainAxisSpacing: 16, // Separación vertical entre cards
-                  crossAxisSpacing: 16, // Separación horizontal entre cards
+                  crossAxisCount: 2,
+                  mainAxisSpacing: 16, 
+                  crossAxisSpacing: 16, 
                   itemCount: state.notas.length,
                   itemBuilder: (context, index) {
                     final nota = state.notas[index];
@@ -39,7 +37,7 @@ class prioridadesBoard extends StatelessWidget {
         Text(
           'Cliente: ${nota['nombreCliente']}',
           style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                fontSize: 20, // Proporcionalmente más grande
+                fontSize: 20,
                 fontWeight: FontWeight.bold,
               ),
         ),
