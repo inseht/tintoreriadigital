@@ -41,18 +41,20 @@ void _limpiarFormulario() {
   _importeTotalController.clear();
   _precioUnitarioController.clear();
   _colorController.clear();
-  
+
   setState(() {
-    _tipoPrendaSeleccionada = null;
-    _servicioSeleccionado = null;
-    _estadoPagoNota = 'Pendiente';
-    _estadoNota = 'Recibido';
+    _tipoPrendaSeleccionada = null; // Reseteo del dropdown
+    _servicioSeleccionado = null; // Reseteo del dropdown
+    _estadoPagoNota = 'Pendiente'; // Valor predeterminado
+    _estadoNota = 'Recibido'; // Valor predeterminado
     _cantidadPrendas = 1;
-    _prendas.clear(); 
-    _fechaInicio = null; 
-    _fechaFin = null; 
+    _prendas.clear();
+    _fechaInicio = null;
+    _fechaFin = null;
+    _color = null; // Reseteo del dropdown de colores
   });
 }
+
   Future<void> _mostrarDatePicker(BuildContext context) async {
     DateTime fechaMinima = DateTime.now().subtract(Duration(days: 60));
     await showDialog(
@@ -153,6 +155,8 @@ void _crearNota() {
   };
 
   context.read<CrearNotaBloc>().add(EnviarFormulario(nota: nota, prendas: _prendas));
+  
+  // Llama a la función de limpiar formulario después de enviar
   _limpiarFormulario();
 }
 
@@ -274,31 +278,32 @@ child: Card(
           ),
         ),
         const SizedBox(height: 8.0),
-        BlocBuilder<CrearNotaBloc, CrearNotaState>(
-          builder: (context, state) {
-            if (state is CrearNotaInicial) {
-              return DropdownButtonFormField<String>(
-                value: _estadoNota,
-                items: state.estadosNota
-                    .map((estado) => DropdownMenuItem<String>(
-                          value: estado,
-                          child: Text(estado, style: const TextStyle(fontSize: 16.0)), // Reducción de tamaño del texto
-                        ))
-                    .toList(),
-                onChanged: (value) {
-                  setState(() {
-                    _estadoNota = value!;
-                  });
-                },
-                decoration: const InputDecoration(
-                  border: OutlineInputBorder(),
-                  labelText: 'Estado de la Nota',
-                ),
-              );
-            }
-            return const CircularProgressIndicator();
-          },
+BlocBuilder<CrearNotaBloc, CrearNotaState>(
+  builder: (context, state) {
+    if (state is CrearNotaInicial) {
+      return DropdownButtonFormField<String>(
+        value: _estadoNota,
+        items: state.estadosNota
+            .map((estado) => DropdownMenuItem<String>(
+                  value: estado,
+                  child: Text(estado, style: const TextStyle(fontSize: 16.0)),
+                ))
+            .toList(),
+        onChanged: (value) {
+          setState(() {
+            _estadoNota = value!;
+          });
+        },
+        decoration: const InputDecoration(
+          border: OutlineInputBorder(),
+          labelText: 'Estado de la Nota',
         ),
+      );
+    }
+    return const SizedBox.shrink(); // Sin CircularProgressIndicator
+  },
+),
+
         const SizedBox(height: 8.0),
         BlocConsumer<CrearNotaBloc, CrearNotaState>(
           listener: (context, state) {
@@ -343,7 +348,7 @@ child: Card(
               );
             }
             if (state is CrearPrendaInProgress) {
-      return const SizedBox();
+            return const CircularProgressIndicator();
             }
             return const SizedBox.shrink();
           },
@@ -435,8 +440,9 @@ child: Card(
   ),
 );
 
+
     }
-      return const SizedBox();
+            return const CircularProgressIndicator();
   },
 ),
                                 ),
@@ -446,25 +452,26 @@ child: Card(
   builder: (context, state) {
     if (state is CrearNotaInicial) {
       return DropdownButtonFormField<String>(
-        value: _servicioSeleccionado,
-        items: state.servicios
-            .map((servicio) => DropdownMenuItem<String>(
-                  value: servicio,
-                  child: Text(servicio),
-                ))
-            .toList(),
-        onChanged: (value) {
-          setState(() {
-            _servicioSeleccionado = value;
-          });
-        },
-        decoration: const InputDecoration(
-          border: OutlineInputBorder(),
-          labelText: 'Servicios',
-        ),
-      );
+  value: _servicioSeleccionado,
+  items: state.servicios
+      .map((servicio) => DropdownMenuItem<String>(
+            value: servicio,
+            child: Text(servicio),
+          ))
+      .toList(),
+  onChanged: (value) {
+    setState(() {
+      _servicioSeleccionado = value;
+    });
+  },
+  decoration: const InputDecoration(
+    border: OutlineInputBorder(),
+    labelText: 'Servicios',
+  ),
+);
+
     }
-      return const SizedBox();
+            return const CircularProgressIndicator();
   },
 ),
 ), 
@@ -503,7 +510,7 @@ Padding(
           ),
         );
       }
-      return const SizedBox();
+            return const CircularProgressIndicator();
     },
   ),
 ),

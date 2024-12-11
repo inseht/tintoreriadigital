@@ -71,7 +71,7 @@ class MainApp extends StatelessWidget {
                     GlobalCupertinoLocalizations.delegate,
                   ],
                   supportedLocales: const [
-                    Locale('es', 'ES'), // Español
+                    Locale('es', 'ES'), 
                   ],
                   locale: const Locale('es', 'ES'),
                 );
