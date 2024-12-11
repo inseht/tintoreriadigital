@@ -1,4 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:intl/intl.dart';
 import '../bd/bdmodel.dart';
 
 // Estados
@@ -124,41 +125,41 @@ class CrearNotaBloc extends Bloc<CrearNotaEvent, CrearNotaState> {
       emit(FormularioValido());
     }
   }
+  
 Future<void> _onEnviarFormulario(EnviarFormulario event, Emitter<CrearNotaState> emit) async {
   emit(CrearPrendaInProgress());
   try {
-    // Normalizar fechas en el mapa de nota
+    // Procesar fechas en el mapa de nota
     final notaProcesada = event.nota.map((key, value) {
       if (value is DateTime) {
-        return MapEntry(key, value.toIso8601String()); // Convertir DateTime a String ISO
-      } else if (key.contains('fecha') && value is String) {
-        // Limpiar y verificar si la cadena es una fecha válida
-        final cleanValue = value.replaceAll(RegExp(r'[^\dT:.-]'), ''); // Eliminar caracteres no numéricos o no deseados
-        final fecha = DateTime.tryParse(cleanValue);
-        if (fecha == null) {
-          throw FormatException('Fecha inválida: $value');
-        }
-        return MapEntry(key, fecha.toIso8601String()); // Convertir a formato ISO si es válida
+        return MapEntry(key, DateFormat('dd/MM/yyyy').format(value));
       }
-      return MapEntry(key, value); // Mantener otros valores tal cual
+      return MapEntry(key, value);
     });
 
-    // Guardar la nota
-    await BdModel.crearNotaConPrendas(notaProcesada, event.prendas);
+    // Crear la nota y asignar las prendas asociadas
+    final idNota = await BdModel.crearNotaConPrendas(notaProcesada, event.prendas);
+
+    // Asignar prendas sin nota (opcional, dependiendo del flujo deseado)
+    await BdModel.asignarPrendasNoAsignadasALaUltimaNota();
+
+    // Verificar las prendas después de la asignación
+    await BdModel.verificarAsignacion();
 
     emit(FormularioEnviado());
     emit(CrearNotaInicial());
   } catch (e) {
-    // Muestra la excepción completa para un diagnóstico más detallado
     emit(FormularioInvalido('Error al guardar la nota: ${e.toString()}'));
     emit(CrearNotaInicial());
   }
 }
 
-// static Future<List<Map<String, dynamic>>> obtenerPrendasLibres() async {
-//   final db = await inicializarBD();
-//   return await db.query('Prendas', where: 'idNota IS NULL');
-// }
+
+static Future<List<Map<String, dynamic>>> obtenerPrendasLibres() async {
+    final db = await BdModel.inicializarBD();
+  return await db.query('Prendas', where: 'idNota IS NULL');
+}
+
 
   Future<void> _onCrearPrendaSubmitted(CrearPrendaSubmitted event, Emitter<CrearNotaState> emit) async {
     emit(CrearPrendaInProgress());

@@ -61,9 +61,7 @@ class BdModel {
     return db;
   }
 
-  
-
-  static Future<void> insertarNotaYAsignarPrendas(Map<String, dynamic> nota, List<Map<String, dynamic>> prendas) async {
+static Future<void> insertarNotaYAsignarPrendas(Map<String, dynamic> nota, List<Map<String, dynamic>> prendas) async {
   final db = await inicializarBD();
   final dateFormat = DateFormat('dd/MM/yyyy');
 
@@ -71,14 +69,15 @@ class BdModel {
     try {
       final notaConFechas = {
         ...nota,
-        'fechaRecibido': dateFormat.format(nota['fechaRecibido']),
-        'fechaEstimada': dateFormat.format(nota['fechaEstimada']),
+        'fechaRecibido': dateFormat.format(nota['fechaRecibido'] as DateTime),
+        'fechaEstimada': dateFormat.format(nota['fechaEstimada'] as DateTime),
       };
 
       print('Insertando nota: $notaConFechas');
       int idNota = await txn.insert('Notas', notaConFechas);
       print('Nota insertada con id: $idNota');
 
+      // Asignar las prendas a la nota insertada
       for (var prenda in prendas) {
         prenda['idNota'] = idNota;
         print('Insertando prenda: $prenda');
@@ -91,9 +90,6 @@ class BdModel {
   });
 }
 
-
-
-    // Método para obtener notas filtradas por texto
   static Future<List<Map<String, dynamic>>> obtenerNotasFiltradas(String filtro) async {
     final db = await inicializarBD();
     final List<Map<String, dynamic>> notas = await db.query(
@@ -154,31 +150,82 @@ static Future<void> imprimirPrendas() async {
 
 static Future<int> crearNotaConPrendas(Map<String, dynamic> nota, List<Map<String, dynamic>> prendas) async {
   final db = await inicializarBD();
-
-  // Insertar nota y obtener el ID generado
+  
+  // Insertar la nota y obtener el idNota
   final idNota = await db.insert('Notas', nota);
 
-  // Insertar prendas asociadas a esta nota
+  // Insertar las prendas asociadas a esta nota, asegurándose de asignar el idNota
   for (final prenda in prendas) {
     await db.insert('Prendas', {...prenda, 'idNota': idNota});
   }
 
-  return idNota;
+  return idNota;  // Devolver el idNota generado
 }
+
+static Future<void> asignarPrendasNoAsignadasALaUltimaNota() async {
+  final db = await inicializarBD();
+  try {
+    final idNota = await obtenerUltimaNotaId();
+    if (idNota == null) {
+      print('No hay notas disponibles para asignar prendas.');
+      return;
+    }
+
+    final prendasSinAsignar = await obtenerPrendasNoAsignadas();
+    print('Prendas sin asignar antes de la actualización: $prendasSinAsignar');
+
+    if (prendasSinAsignar.isNotEmpty) {
+      for (var prenda in prendasSinAsignar) {
+        await db.update(
+          'Prendas',
+          {'idNota': idNota},
+          where: 'idPrenda = ?',
+          whereArgs: [prenda['idPrenda']],
+        );
+        print('Prenda ${prenda['idPrenda']} asignada a la nota $idNota');
+      }
+    } else {
+      print('No hay prendas sin asignar.');
+    }
+  } catch (e) {
+    print('Error al asignar prendas no asignadas: $e');
+  }
+}
+
+
+static Future<void> verificarAsignacion() async {
+  final db = await inicializarBD();
+  final prendas = await db.query('Prendas', where: 'idNota IS NOT NULL');
+  print('Prendas asignadas a notas: $prendas');
+}
+
+
+static Future<void> insertarPrenda(Map<String, dynamic> prenda) async {
+  final db = await BdModel.inicializarBD();
+  try {
+    await db.insert('Prendas', prenda);
+    print('Prenda insertada: $prenda');
+  } catch (e) {
+    print('Error al insertar prenda: $e');
+  }
+}
+
 
 static Future<List<Map<String, dynamic>>> obtenerPrendasSinNota() async {
   final db = await inicializarBD();
-  return await db.query('Prendas', where: 'idNota IS NULL');
+  final prendas = await db.query('Prendas', where: 'idNota IS NULL');
+  print('Prendas sin asignar: $prendas');
+  return prendas;
 }
+
 
 static Future<void> verificarPrendasNoAsignadas() async {
   final db = await inicializarBD();
   final prendas = await db.query('Prendas', where: 'idNota IS NULL');
-  print('Prendas no asignadas: $prendas');
+  print('Prendas sin asignar actualmente: $prendas');
 }
 
-
-  static Future<List<Map<String, dynamic>>> obtenerPrendasNoAsignadas() async {
+static Future<List<Map<String, dynamic>>> obtenerPrendasNoAsignadas() async {
   final db = await inicializarBD();
   final prendas = await db.query(
     'Prendas',
@@ -187,37 +234,37 @@ static Future<void> verificarPrendasNoAsignadas() async {
   return prendas;
 }
 
+
 static Future<int?> obtenerUltimaNotaId() async {
   final db = await inicializarBD();
-  final result = await db.rawQuery('SELECT MAX(idNota) as maxId FROM Notas');
-
-  if (result.isNotEmpty && result.first['maxId'] != null) {
-    return result.first['maxId'] as int;
+  try {
+    final result = await db.rawQuery('SELECT MAX(idNota) as maxId FROM Notas');
+    if (result.isNotEmpty && result.first['maxId'] != null) {
+      return result.first['maxId'] as int;
+    } else {
+      print('No se encontró ninguna nota en la tabla Notas.');
+      return null;
+    }
+  } catch (e) {
+    print('Error al obtener la última nota: $e');
+    return null;
+  } finally {
+    await db.close();
   }
-  return null; // Si no hay notas
 }
 
-static Future<void> asignarPrendasNoAsignadasALaUltimaNota() async {
+
+static Future<void> asignarPrendasANota(int idNota, List<Map<String, dynamic>> prendas) async {
   final db = await inicializarBD();
-  final ultimaNotaId = await obtenerUltimaNotaId();
-
-  if (ultimaNotaId == null) {
-    print('No hay notas disponibles para asignar prendas.');
-    return;
-  }
-
-  try {
-    final resultado = await db.update(
+  for (final prenda in prendas) {
+    print('Actualizando prenda con id: ${prenda['idPrenda']} para asignarla a la nota: $idNota');
+    await db.update(
       'Prendas',
-      {'idNota': ultimaNotaId},
-      where: 'idNota IS NULL',
+      {'idNota': idNota},
+      where: 'idPrenda = ?',
+      whereArgs: [prenda['idPrenda']],
     );
-
-    print('$resultado prendas asignadas al ID de la última nota: $ultimaNotaId');
-  } catch (e) {
-    print('Error al asignar prendas no asignadas: $e');
   }
-  // No cierres la base de datos aquí.
 }
 
 static Future<List<Map<String, dynamic>>> obtenerNotasConPrendas() async {
