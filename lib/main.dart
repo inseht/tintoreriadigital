@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:bitsdojo_window/bitsdojo_window.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart'; 
 import 'themes/appTheme.dart';
 import 'themes/themeProvider.dart';
 import 'vistas/vistaPrincipal.dart';
@@ -23,54 +24,62 @@ void main() {
       ..show();
   });
 }
+
 class MainApp extends StatelessWidget {
   const MainApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return MultiProvider(
-      providers: [
-        ChangeNotifierProvider<ThemeProvider>(
-          create: (_) => ThemeProvider(),
-        ),
-      ],
-      child: MultiBlocProvider(
-        providers: [
-          BlocProvider<ProveedoresBloc>(
-            create: (_) => ProveedoresBloc(),
-          ),
-          BlocProvider<PrioridadesBloc>(
-            create: (_) => PrioridadesBloc(),
-          ),
-          BlocProvider<CrearNotaBloc>(
-            create: (_) => CrearNotaBloc(),
-          ),
-          BlocProvider<CalendarioBloc>( 
-            create: (_) => CalendarioBloc(),
-          ),
-        ],
-        child: Consumer<ThemeProvider>(
-          builder: (context, themeProvider, child) {
-            return MaterialApp(
-              theme: AppTheme.lightTheme,
-              home: const MainView(),
-              routes: {
-                '/proveedores': (context) => const Proveedores(),
-                '/prioridades': (context) =>  prioridadesBoard(),
+    return ScreenUtilInit(
+      designSize: const Size(360, 690), 
+      minTextAdapt: true,
+      splitScreenMode: true,
+      builder: (context, child) {
+        return MultiProvider(
+          providers: [
+            ChangeNotifierProvider<ThemeProvider>(
+              create: (_) => ThemeProvider(),
+            ),
+          ],
+          child: MultiBlocProvider(
+            providers: [
+              BlocProvider<ProveedoresBloc>(
+                create: (_) => ProveedoresBloc(),
+              ),
+              BlocProvider<PrioridadesBloc>(
+                create: (_) => PrioridadesBloc(),
+              ),
+              BlocProvider<CrearNotaBloc>(
+                create: (_) => CrearNotaBloc(),
+              ),
+              BlocProvider<CalendarioBloc>(
+                create: (_) => CalendarioBloc(),
+              ),
+            ],
+            child: Consumer<ThemeProvider>(
+              builder: (context, themeProvider, child) {
+                return MaterialApp(
+                  theme: AppTheme.lightTheme,
+                  home: const MainView(),
+                  routes: {
+                    '/proveedores': (context) => const Proveedores(),
+                    '/prioridades': (context) => prioridadesBoard(),
+                  },
+                  localizationsDelegates: const [
+                    GlobalMaterialLocalizations.delegate,
+                    GlobalWidgetsLocalizations.delegate,
+                    GlobalCupertinoLocalizations.delegate,
+                  ],
+                  supportedLocales: const [
+                    Locale('es', 'ES'), // Español
+                  ],
+                  locale: const Locale('es', 'ES'),
+                );
               },
-              localizationsDelegates: const [
-        GlobalMaterialLocalizations.delegate,
-        GlobalWidgetsLocalizations.delegate,
-        GlobalCupertinoLocalizations.delegate,
-      ],
-      supportedLocales: const [
-        Locale('es', 'ES'), // Español
-      ],
-      locale: const Locale('es', 'ES'), 
-            );
-          },
-        ),
-      ),
+            ),
+          ),
+        );
+      },
     );
   }
 }

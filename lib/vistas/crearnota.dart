@@ -53,10 +53,8 @@ void _limpiarFormulario() {
     _fechaFin = null; 
   });
 }
-
   Future<void> _mostrarDatePicker(BuildContext context) async {
     DateTime fechaMinima = DateTime.now().subtract(Duration(days: 60));
-
     await showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -98,9 +96,7 @@ void _agregarPrenda() {
     );
     return;
   }
-
   double precioUnitario = double.tryParse(_precioUnitarioController.text) ?? 0.0;
-
   if (_tipoPrendaSeleccionada != null && 
       _cantidadPrendas > 0 && 
       _servicioSeleccionado != null && 
@@ -114,7 +110,7 @@ void _agregarPrenda() {
         'cantidad': _cantidadPrendas,
       });
 
-      print('Prendas agregadas hasta ahora: $_prendas'); // <-- Agregado para depurar
+      print('Prendas agregadas hasta ahora: $_prendas');
 
       double importeTotalActual = double.tryParse(_importeTotalController.text) ?? 0.0;
       _importeTotalController.text = (importeTotalActual + precioUnitario * _cantidadPrendas).toStringAsFixed(2);
@@ -131,10 +127,7 @@ void _agregarPrenda() {
   }
 }
 void _crearNota() {
-  if (_fechaInicio == null || _fechaFin == null || _nombreController.text.trim().isEmpty || _telefonoController.text.trim().isEmpty) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Por favor, complete todos los campos antes de crear la nota')),
-    );
+  if (!_validarFormulario()) {
     return;
   }
 
@@ -144,13 +137,15 @@ void _crearNota() {
     );
     return;
   }
+
   double importeFinal = double.tryParse(_importeTotalController.text) ?? 0.0;
+
   final Map<String, dynamic> nota = {
     'nombreCliente': _nombreController.text,
     'telefonoCliente': _telefonoController.text,
     'fechaRecibido': _fechaInicio,
     'fechaEstimada': _fechaFin,
-    'importe': importeFinal, // Guardar el importe calculado.
+    'importe': importeFinal,
     'estadoPago': _estadoPagoNota,
     'prioridad': 1,
     'observaciones': _observacionesController.text,
@@ -160,44 +155,53 @@ void _crearNota() {
   context.read<CrearNotaBloc>().add(EnviarFormulario(nota: nota, prendas: _prendas));
   _limpiarFormulario();
 }
+
 bool _validarFormulario() {
-  // Validar que los campos básicos no estén vacíos
   if (_nombreController.text.trim().isEmpty) {
+    print('Error: Nombre vacío');
     _mostrarMensaje('El nombre del cliente es obligatorio.');
     return false;
   }
   if (_telefonoController.text.trim().isEmpty) {
+    print('Error: Teléfono vacío');
     _mostrarMensaje('El teléfono del cliente es obligatorio.');
     return false;
   }
   if (!RegExp(r'^\d{10}$').hasMatch(_telefonoController.text.trim())) {
+    print('Error: Teléfono no válido');
     _mostrarMensaje('El teléfono debe contener 10 dígitos numéricos.');
     return false;
   }
   if (_fechaInicio == null || _fechaFin == null) {
+    print('Error: Fecha inicio o fin nula');
     _mostrarMensaje('Debe seleccionar un rango de fechas.');
     return false;
   }
   if (_fechaFin!.isBefore(_fechaInicio!)) {
+    print('Error: Fecha fin antes de fecha inicio');
     _mostrarMensaje('La fecha de entrega no puede ser anterior a la fecha de recibido.');
     return false;
   }
   if (_prendas.isEmpty) {
+    print('Error: Prendas vacías');
     _mostrarMensaje('Debe agregar al menos una prenda antes de guardar la nota.');
     return false;
   }
   double importeTotal = double.tryParse(_importeTotalController.text) ?? 0.0;
   if (importeTotal <= 0.0) {
+    print('Error: Importe total no válido');
     _mostrarMensaje('El importe total debe ser mayor a 0.');
     return false;
   }
   if (_estadoPagoNota == 'Abono') {
     double abono = double.tryParse(_abonoController.text) ?? 0.0;
     if (abono <= 0.0 || abono > importeTotal) {
+      print('Error: Abono no válido');
       _mostrarMensaje('El abono debe ser mayor a 0 y menor o igual al importe total.');
       return false;
     }
   }
+  print('Validación exitosa');
   return true;
 }
 void _mostrarMensaje(String mensaje) {
@@ -216,201 +220,181 @@ void _mostrarMensaje(String mensaje) {
               child: Row(
                 children: <Widget>[
                   Expanded(
-                    child: Card(
-                      child: Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text(
-                              'Información general',
-                              style: TextStyle(fontSize: 19.0),
-                            ),
-                            const SizedBox(height: 16.0),
-                            Column(
-                              children: [
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(vertical: 8.0),
-                                  child: TextField(
-                                    controller: _nombreController,
-                                    decoration: const InputDecoration(
-                                      border: OutlineInputBorder(),
-                                      labelText: 'Nombre del cliente',
-                                    ),
-                                  ),
-                                ),
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(vertical: 8.0),
-                                  child: TextField(
-                                    controller: _telefonoController,
-                                    keyboardType: TextInputType.phone,
-                                    decoration: const InputDecoration(
-                                      border: OutlineInputBorder(),
-                                      labelText: 'Teléfono del cliente',
-                                    ),
-                                  ),
-                                ),
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(vertical: 8.0),
-                                  child: Row(
-                                    children: [
-                                      ElevatedButton(
-                                        onPressed: () => _mostrarDatePicker(context),
-                                        child: const Text('Seleccionar fechas'),
-                                        
-                                      ),
-                                      const SizedBox(width: 10),
-                                      Text(
-                                        _fechaInicio != null && _fechaFin != null
-                                            ? '${DateFormat('dd/MM/yyyy').format(_fechaInicio!)} - ${DateFormat('dd/MM/yyyy').format(_fechaFin!)}'
-                                            : 'No seleccionado',
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(vertical: 8.0),
-                                ),
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(vertical: 8.0),
-                                  child: TextField(
-                                    controller: _observacionesController,
-                                    decoration: const InputDecoration(
-                                      border: OutlineInputBorder(),
-                                      labelText: 'Observaciones',
-                                    ),
-                                  ),
-                                ),
-            BlocBuilder<CrearNotaBloc, CrearNotaState>(
-              builder: (context, state) {
-                if (state is CrearNotaInicial) {
-                  return DropdownButtonFormField<String>(
-                    value: _estadoNota,
-                    items: state.estadosNota
-                        .map((estado) => DropdownMenuItem<String>(
-                              value: estado,
-                              child: Text(estado),
-                            ))
-                        .toList(),
-                    onChanged: (value) {
-                      setState(() {
-                        _estadoNota = value!;
-                      });
-                    },
-                    decoration: const InputDecoration(
-                      border: OutlineInputBorder(),
-                      labelText: 'Estado de la Nota',
-                    ),
-                  );
-                }
-                return const CircularProgressIndicator();
-              },
-            ),
-    const SizedBox(height: 8.0),
-BlocConsumer<CrearNotaBloc, CrearNotaState>(
-  listener: (context, state) {
-    if (state is CrearPrendaSuccess) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Prendas no asignadas fueron asociadas con éxito.')),
-      );
-    } else if (state is CrearPrendaFailure) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: ${state.error}')),
-      );
-    }
-  },
-  builder: (context, state) {
-    if (state is CrearNotaInicial) {
-      return DropdownButtonFormField<String>(
-        value: state.estadosPago.contains(_estadoPagoNota) ? _estadoPagoNota : null,
-        items: state.estadosPago.map((estado) {
-          return DropdownMenuItem<String>(
-            value: estado,
-            child: Text(estado),
-          );
-        }).toList(),
-        onChanged: (value) {
-          setState(() {
-            _estadoPagoNota = value!;
-            if (_estadoPagoNota != 'Abono') {
-              _abonoController.clear();
-            } else {
-              // Si el estado es "Abono", actualiza el importe total dinámicamente.
-              double abono = double.tryParse(_abonoController.text) ?? 0.0;
-              double importeActual = double.tryParse(_importeTotalController.text) ?? 0.0;
-              _importeTotalController.text = (importeActual - abono).toStringAsFixed(2);
-            }
-          });
-        },
-        decoration: InputDecoration(
-          border: OutlineInputBorder(),
-          labelText: 'Estado de pago',
-          hintText: _prendas.isEmpty ? 'Agregue prendas primero' : null,
+child: Card(
+  child: Padding(
+    padding: const EdgeInsets.all(8.0),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Información general',
+          style: TextStyle(fontSize: 19.0),
         ),
-      );
-    }
-    // Indicador de progreso durante la asignación de prendas.
-    if (state is CrearPrendaInProgress) {
-      return const Center(child: CircularProgressIndicator());
-    }    // Estado por defecto si no es inicial ni en progreso.
-    return const SizedBox.shrink();
-  },
-),
-Padding(
-  padding: const EdgeInsets.symmetric(vertical: 8.0),
-  child: TextField(
-    controller: _abonoController,
-    enabled: _estadoPagoNota == 'Abono', 
-    keyboardType: TextInputType.number,
-    onChanged: (value) {
-      setState(() {
-        double abono = double.tryParse(value) ?? 0.0;
-        double importeTotalActual = _prendas.fold<double>(0.0, (sum, prenda) => sum + prenda['subtotal']);
-        _importeTotalController.text = (importeTotalActual - abono).toStringAsFixed(2);
-      });
-    },
-    decoration: const InputDecoration(
-      border: OutlineInputBorder(),
-      labelText: 'Abono',
+        const SizedBox(height: 8.0),
+        TextField(
+          controller: _nombreController,
+          decoration: const InputDecoration(
+            border: OutlineInputBorder(),
+            labelText: 'Nombre del cliente',
+          ),
+        ),
+        const SizedBox(height: 8.0),
+        TextField(
+          controller: _telefonoController,
+          keyboardType: TextInputType.phone,
+          decoration: const InputDecoration(
+            border: OutlineInputBorder(),
+            labelText: 'Teléfono del cliente',
+          ),
+        ),
+        const SizedBox(height: 8.0),
+        Row(
+          children: [
+            ElevatedButton(
+              onPressed: () => _mostrarDatePicker(context),
+              child: const Text('Seleccionar fechas'),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                _fechaInicio != null && _fechaFin != null
+                    ? '${DateFormat('dd/MM/yyyy').format(_fechaInicio!)} - ${DateFormat('dd/MM/yyyy').format(_fechaFin!)}'
+                    : 'No seleccionado',
+                style: const TextStyle(fontSize: 16.0), // Reducción de tamaño del texto
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8.0),
+        TextField(
+          controller: _observacionesController,
+          decoration: const InputDecoration(
+            border: OutlineInputBorder(),
+            labelText: 'Observaciones',
+          ),
+        ),
+        const SizedBox(height: 8.0),
+        BlocBuilder<CrearNotaBloc, CrearNotaState>(
+          builder: (context, state) {
+            if (state is CrearNotaInicial) {
+              return DropdownButtonFormField<String>(
+                value: _estadoNota,
+                items: state.estadosNota
+                    .map((estado) => DropdownMenuItem<String>(
+                          value: estado,
+                          child: Text(estado, style: const TextStyle(fontSize: 16.0)), // Reducción de tamaño del texto
+                        ))
+                    .toList(),
+                onChanged: (value) {
+                  setState(() {
+                    _estadoNota = value!;
+                  });
+                },
+                decoration: const InputDecoration(
+                  border: OutlineInputBorder(),
+                  labelText: 'Estado de la Nota',
+                ),
+              );
+            }
+            return const CircularProgressIndicator();
+          },
+        ),
+        const SizedBox(height: 8.0),
+        BlocConsumer<CrearNotaBloc, CrearNotaState>(
+          listener: (context, state) {
+            if (state is CrearPrendaSuccess) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Prendas no asignadas fueron asociadas con éxito.')),
+              );
+            } else if (state is CrearPrendaFailure) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Error: ${state.error}')),
+              );
+            }
+          },
+          builder: (context, state) {
+            if (state is CrearNotaInicial) {
+              return DropdownButtonFormField<String>(
+                value: state.estadosPago.contains(_estadoPagoNota) ? _estadoPagoNota : null,
+                items: state.estadosPago.map((estado) {
+                  return DropdownMenuItem<String>(
+                    value: estado,
+                    child: Text(estado, style: const TextStyle(fontSize: 16.0)), // Reducción de tamaño del texto
+                  );
+                }).toList(),
+                onChanged: (value) {
+                  setState(() {
+                    _estadoPagoNota = value!;
+                    if (_estadoPagoNota != 'Abono') {
+                      _abonoController.clear();
+                    } else {
+                      double abono = double.tryParse(_abonoController.text) ?? 0.0;
+                      double importeActual = double.tryParse(_importeTotalController.text) ?? 0.0;
+                      _importeTotalController.text = (importeActual - abono).toStringAsFixed(2);
+                    }
+                  });
+                },
+                decoration: InputDecoration(
+                  border: OutlineInputBorder(),
+                  labelText: 'Estado de pago',
+                  hintText: _prendas.isEmpty ? 'Agregue prendas primero' : null,
+                  hintStyle: const TextStyle(fontSize: 14.0), // Reducción de tamaño del texto
+                ),
+              );
+            }
+            if (state is CrearPrendaInProgress) {
+      return const SizedBox();
+            }
+            return const SizedBox.shrink();
+          },
+        ),
+        const SizedBox(height: 8.0),
+        TextField(
+          controller: _abonoController,
+          enabled: _estadoPagoNota == 'Abono',
+          keyboardType: TextInputType.number,
+          onChanged: (value) {
+            setState(() {
+              double abono = double.tryParse(value) ?? 0.0;
+              double importeTotalActual = _prendas.fold<double>(0.0, (sum, prenda) => sum + prenda['subtotal']);
+              _importeTotalController.text = (importeTotalActual - abono).toStringAsFixed(2);
+            });
+          },
+          decoration: const InputDecoration(
+            border: OutlineInputBorder(),
+            labelText: 'Abono',
+          ),
+        ),
+        const SizedBox(height: 8.0),
+        TextField(
+          controller: _importeTotalController,
+          enabled: false,
+          keyboardType: TextInputType.number,
+          decoration: const InputDecoration(
+            border: OutlineInputBorder(),
+            labelText: 'Importe total',
+          ),
+        ),
+        const SizedBox(height: 8.0),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Text('Selecciona la prioridad'),
+            const SizedBox(width: 8.0),
+            RoundCheckBox(
+              onTap: (selected) {},
+              uncheckedColor: Colors.red,
+              uncheckedWidget: const Icon(
+                Icons.close,
+                color: Colors.white,
+              ),
+            ),
+          ],
+        ),
+      ],
     ),
   ),
 ),
-        Padding(
-          padding: const EdgeInsets.symmetric(vertical: 8.0),
-          child: TextField(
-            controller: _importeTotalController,
-            enabled: false, 
-            keyboardType: TextInputType.number,
-            decoration: const InputDecoration(
-              border: OutlineInputBorder(),
-              labelText: 'Importe total',
-            ),
-          ),
-        ),
-                              ],
-                            ),
-                            const SizedBox(height: 8.0),
-                            Center(
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  const Text('Selecciona la prioridad'),
-                                  const SizedBox(width: 8.0),
-                                  RoundCheckBox(
-                                    onTap: (selected) {},
-                                    uncheckedColor: Colors.red,
-                                    uncheckedWidget: const Icon(
-                                      Icons.close,
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
                   ),
                   const SizedBox(width: 8.0),
                   Expanded(
@@ -452,7 +436,7 @@ Padding(
 );
 
     }
-    return CircularProgressIndicator(); 
+      return const SizedBox();
   },
 ),
                                 ),
@@ -480,10 +464,10 @@ Padding(
         ),
       );
     }
-    return CircularProgressIndicator(); 
+      return const SizedBox();
   },
 ),
-                                ),                     
+), 
 Padding(
   padding: const EdgeInsets.symmetric(vertical: 8.0),
   child: TextField(
@@ -519,7 +503,7 @@ Padding(
           ),
         );
       }
-      return const CircularProgressIndicator();
+      return const SizedBox();
     },
   ),
 ),
@@ -539,11 +523,7 @@ Padding(
                             const SizedBox(height: 16.0),
 Center(
   child: ElevatedButton(
-  onPressed: (_tipoPrendaSeleccionada != null &&
-              _servicioSeleccionado != null &&
-              _precioUnitarioController.text.isNotEmpty)
-      ? _agregarPrenda
-      : null,
+  onPressed: _agregarPrenda, // La función siempre se ejecutará al presionar el botón
   style: ElevatedButton.styleFrom(
     padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 40),
     minimumSize: const Size(200, 70),
@@ -592,7 +572,7 @@ if (_prendas.isNotEmpty)
               ),
             ),
           ),
-          const SizedBox(height: 50.0),
+          const SizedBox(height: 25.0),
           Center(
             child:ElevatedButton(
   onPressed: () {
@@ -609,13 +589,13 @@ if (_prendas.isNotEmpty)
         'estado': _estadoNota!,
       };
       context.read<CrearNotaBloc>().add(EnviarFormulario(nota: nota, prendas: _prendas));
-      _limpiarFormulario(); // Limpia el formulario después de enviar
+      _limpiarFormulario(); 
     }
   },
   child: const Text('Crear Nota'),
 ),
           ),
-          const SizedBox(height: 100.0),
+          const SizedBox(height: 50.0),
         ],
       ),
     );

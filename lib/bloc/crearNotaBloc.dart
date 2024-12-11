@@ -16,7 +16,7 @@ class CrearNotaInicial extends CrearNotaState {
     this.estadosPago = const ['Pendiente', 'Pagado', 'Abonado'],
     this.servicios = const ['Tintorería', 'Sastrería', 'Ambos', 'Otro'],
     this.colores = const ['Rojo', 'Verde', 'Azul', 'Negro', 'Marrón', 'Amarillo', 'Blanco', 'Gris', 'Otro'],
-    this.tiposPrenda = const ['Saco', 'Camisa', 'Pantalon', 'Vestido', 'Sueter', 'Traje', 'Colcha', 'Cortina', 'Blusa', 'Otro'],
+    this.tiposPrenda = const ['Saco', 'Camisa', 'Pantalón', 'Vestido', 'Suéter', 'Traje', 'Colcha', 'Cortina', 'Blusa', 'Otro'],
   });
 }
 
@@ -99,15 +99,10 @@ class ActualizarPrenda extends CrearNotaEvent {
   ActualizarPrenda({required this.idPrenda, required this.nuevaPrenda});
 }
 
-
-
 class CargarNotasConPrendas extends CrearNotaEvent {}
 
 class AsignarPrendasNoAsignadas extends CrearNotaEvent {}
 
-
-
-// Bloc
 // Bloc
 class CrearNotaBloc extends Bloc<CrearNotaEvent, CrearNotaState> {
   CrearNotaBloc() : super(CrearNotaInicial()) {
@@ -124,7 +119,7 @@ class CrearNotaBloc extends Bloc<CrearNotaEvent, CrearNotaState> {
   void _onValidarFormulario(ValidarFormulario event, Emitter<CrearNotaState> emit) {
     if (event.nombreCliente.isEmpty || event.telefonoCliente.isEmpty) {
       emit(FormularioInvalido('El nombre y teléfono son requeridos.'));
-    } else if (!RegExp(r'^\d+$').hasMatch(event.telefonoCliente)) {
+    } else if (!RegExp(r'^\d+\$').hasMatch(event.telefonoCliente)) {
       emit(FormularioInvalido('El teléfono debe contener sólo números.'));
     } else if (DateTime.parse(event.fechaEstimada).isBefore(DateTime.parse(event.fechaRecibido))) {
       emit(FormularioInvalido('La fecha estimada no puede ser anterior a la fecha recibida.'));
@@ -133,47 +128,24 @@ class CrearNotaBloc extends Bloc<CrearNotaEvent, CrearNotaState> {
     }
   }
 
-Future<void> _onEnviarFormulario(EnviarFormulario event, Emitter<CrearNotaState> emit) async {
-  try {
-    if (event.prendas.isEmpty) {
-      emit(FormularioInvalido('Debe agregar al menos una prenda.'));
-      return;
+  Future<void> _onEnviarFormulario(EnviarFormulario event, Emitter<CrearNotaState> emit) async {
+    try {
+      if (event.prendas.isEmpty) {
+        emit(FormularioInvalido('Debe agregar al menos una prenda.'));
+        return;
+      }
+      await BdModel.crearNotaConPrendas(event.nota, event.prendas);
+      add(AsignarPrendasNoAsignadas());
+      emit(FormularioEnviado());
+    } catch (e) {
+      emit(FormularioInvalido('Error al guardar la nota: $e'));
     }
-    // Insertar la nota con las prendas
-    await BdModel.crearNotaConPrendas(event.nota, event.prendas);
-    
-    // Asignar prendas no asignadas si es necesario
-    add(AsignarPrendasNoAsignadas());
-    
-    emit(FormularioEnviado());
-  } catch (e) {
-    emit(FormularioInvalido('Error al guardar la nota: $e'));
   }
-}
-
-  // Future<void> _onEnviarFormulario(EnviarFormulario event, Emitter<CrearNotaState> emit) async {
-  //   emit(CrearPrendaInProgress());
-  //   try {
-  //     // Insertar la nota y las prendas en la base de datos
-  //     await BdModel.crearNotaConPrendas(event.nota, event.prendas);
-      
-  //     // Llamar a evento para asignar prendas no asignadas, si es necesario
-  //     add(AsignarPrendasNoAsignadas());
-      
-  //     // Emitir estado de éxito
-  //     emit(FormularioEnviado());
-  //   } catch (e) {
-  //     emit(FormularioInvalido('Error al guardar la nota: $e'));
-  //   }
-  // }
-
 
   Future<void> _onAsignarPrendasNoAsignadas(AsignarPrendasNoAsignadas event, Emitter<CrearNotaState> emit) async {
     emit(CrearPrendaInProgress());
     try {
-      // Llamar a BdModel para asignar prendas no asignadas
       await BdModel.asignarPrendasNoAsignadasALaUltimaNota();
-      
       emit(CrearPrendaSuccess());
     } catch (e) {
       emit(CrearPrendaFailure('Error al asignar prendas no asignadas: $e'));
@@ -225,5 +197,4 @@ Future<void> _onEnviarFormulario(EnviarFormulario event, Emitter<CrearNotaState>
       emit(FormularioInvalido('Error al cargar notas: $e'));
     }
   }
-
 }
