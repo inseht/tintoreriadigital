@@ -124,30 +124,41 @@ class CrearNotaBloc extends Bloc<CrearNotaEvent, CrearNotaState> {
       emit(FormularioValido());
     }
   }
-
 Future<void> _onEnviarFormulario(EnviarFormulario event, Emitter<CrearNotaState> emit) async {
   emit(CrearPrendaInProgress());
   try {
-    // Guardar la nota en la base de datos
-    final idNota = await BdModel.crearNotaConPrendas(event.nota, event.prendas);
+    // Normalizar fechas en el mapa de nota
+    final notaProcesada = event.nota.map((key, value) {
+      if (value is DateTime) {
+        return MapEntry(key, value.toIso8601String()); // Convertir DateTime a String ISO
+      } else if (key.contains('fecha') && value is String) {
+        // Limpiar y verificar si la cadena es una fecha válida
+        final cleanValue = value.replaceAll(RegExp(r'[^\dT:.-]'), ''); // Eliminar caracteres no numéricos o no deseados
+        final fecha = DateTime.tryParse(cleanValue);
+        if (fecha == null) {
+          throw FormatException('Fecha inválida: $value');
+        }
+        return MapEntry(key, fecha.toIso8601String()); // Convertir a formato ISO si es válida
+      }
+      return MapEntry(key, value); // Mantener otros valores tal cual
+    });
 
-    // Obtener prendas sin asociar
-    final prendasSinAsociar = await BdModel.obtenerPrendasSinNota();
+    // Guardar la nota
+    await BdModel.crearNotaConPrendas(notaProcesada, event.prendas);
 
-    // Asociar cada prenda sin nota a la última nota creada
-    for (final prenda in prendasSinAsociar) {
-      await BdModel.actualizarPrenda(prenda['idPrenda'], {'idNota': idNota});
-    }
-
-    emit(FormularioEnviado()); 
+    emit(FormularioEnviado());
     emit(CrearNotaInicial());
   } catch (e) {
-    emit(FormularioInvalido('Error al guardar la nota o asociar prendas: $e'));
+    // Muestra la excepción completa para un diagnóstico más detallado
+    emit(FormularioInvalido('Error al guardar la nota: ${e.toString()}'));
     emit(CrearNotaInicial());
   }
 }
 
-
+// static Future<List<Map<String, dynamic>>> obtenerPrendasLibres() async {
+//   final db = await inicializarBD();
+//   return await db.query('Prendas', where: 'idNota IS NULL');
+// }
 
   Future<void> _onCrearPrendaSubmitted(CrearPrendaSubmitted event, Emitter<CrearNotaState> emit) async {
     emit(CrearPrendaInProgress());

@@ -155,49 +155,27 @@ static Future<void> imprimirPrendas() async {
 static Future<int> crearNotaConPrendas(Map<String, dynamic> nota, List<Map<String, dynamic>> prendas) async {
   final db = await inicializarBD();
 
-  // Convertir valores de tipos no compatibles a compatibles
-  final notaProcesada = nota.map((key, value) {
-    if (value is DateTime) {
-      return MapEntry(key, value.toIso8601String()); // Convertir DateTime a String
-    } else if (value == null) {
-      return MapEntry(key, ''); // Reemplazar valores nulos por una cadena vacía
-    } else {
-      return MapEntry(key, value);
-    }
-  });
+  // Insertar nota y obtener el ID generado
+  final idNota = await db.insert('Notas', nota);
 
-  // Insertar la nota en la base de datos
-  final idNota = await db.insert('Notas', notaProcesada);
-
-  // Procesar y asociar las prendas
+  // Insertar prendas asociadas a esta nota
   for (final prenda in prendas) {
-    final prendaProcesada = prenda.map((key, value) {
-      if (value == null) {
-        return MapEntry(key, ''); // Reemplazar valores nulos
-      } else {
-        return MapEntry(key, value);
-      }
-    });
-    await db.insert('Prendas', {...prendaProcesada, 'idNota': idNota});
+    await db.insert('Prendas', {...prenda, 'idNota': idNota});
   }
 
   return idNota;
 }
-
 
 static Future<List<Map<String, dynamic>>> obtenerPrendasSinNota() async {
   final db = await inicializarBD();
   return await db.query('Prendas', where: 'idNota IS NULL');
 }
 
-  // mmmm
-
 static Future<void> verificarPrendasNoAsignadas() async {
   final db = await inicializarBD();
   final prendas = await db.query('Prendas', where: 'idNota IS NULL');
   print('Prendas no asignadas: $prendas');
 }
-
 
 
   static Future<List<Map<String, dynamic>>> obtenerPrendasNoAsignadas() async {
@@ -390,6 +368,5 @@ static Future<void> actualizarPrenda(int idPrenda, Map<String, dynamic> datos) a
   final db = await inicializarBD();
   await db.update('Prendas', datos, where: 'idPrenda = ?', whereArgs: [idPrenda]);
 }
-
   
 }

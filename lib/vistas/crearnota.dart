@@ -55,39 +55,46 @@ void _limpiarFormulario() {
   });
 }
 
-  Future<void> _mostrarDatePicker(BuildContext context) async {
-    DateTime fechaMinima = DateTime.now().subtract(Duration(days: 60));
-    await showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Seleccionar rango de fechas'),
-        content: SizedBox(
-          height: 400,
-          width: 300,
-          child: SfDateRangePicker(
-            selectionMode: DateRangePickerSelectionMode.range,
-            minDate: fechaMinima, 
-            onSelectionChanged: (args) {
-              if (args.value is PickerDateRange) {
-                setState(() {
-                  _fechaInicio = args.value.startDate;
-                  _fechaFin = args.value.endDate;
-                });
-              }
-            },
-          ),
+Future<void> _mostrarDatePicker(BuildContext context) async {
+  DateTime fechaMinima = DateTime.now().subtract(Duration(days: 60));
+  await showDialog(
+    context: context,
+    builder: (context) => AlertDialog(
+      title: const Text('Seleccionar rango de fechas'),
+      content: SizedBox(
+        height: 400,
+        width: 300,
+        child: SfDateRangePicker(
+          selectionMode: DateRangePickerSelectionMode.range,
+          minDate: fechaMinima,
+          onSelectionChanged: (args) {
+            if (args.value is PickerDateRange) {
+              setState(() {
+                _fechaInicio = args.value.startDate;
+                _fechaFin = args.value.endDate;
+              });
+            }
+          },
         ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-            },
-            child: const Text('Cerrar'),
-          ),
-        ],
       ),
-    );
-  }
+      actions: [
+        TextButton(
+          onPressed: () {
+            if (_fechaInicio == null || _fechaFin == null) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Debe seleccionar un rango de fechas.'))
+              );
+            } else {
+              Navigator.of(context).pop();
+            }
+          },
+          child: const Text('Cerrar'),
+        ),
+      ],
+    ),
+  );
+}
+
 void _agregarPrenda() {
   if (_nombreController.text.trim().isEmpty || 
       _telefonoController.text.trim().isEmpty || 
