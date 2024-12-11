@@ -11,7 +11,8 @@ class Buscar extends StatefulWidget {
 class _BuscarState extends State<Buscar> {
   final TextEditingController _controller = TextEditingController();
   List<Map<String, dynamic>> notas = [];
-  List<Map<String, dynamic>> proveedores = [];
+  List<Map<String, dynamic>> prendas = [];
+
   bool cargando = true;
 
   @override
@@ -31,12 +32,17 @@ class _BuscarState extends State<Buscar> {
   Future<void> _cargarDatos() async {
     setState(() => cargando = true);
 
+    // Obtener todas las notas y prendas desde la base de datos
     final todasNotas = await BdModel.obtenerNotas();
-    final todosProveedores = await BdModel.obtenerProveedores();
+    final todosPrendas = await BdModel.obtenerPrendas();
+
+    // Imprimir los datos para verificar qué se está cargando
+    print('Notas cargadas: $todasNotas');
+    print('Prendas cargadas: $todosPrendas');
 
     setState(() {
       notas = todasNotas;
-      proveedores = todosProveedores;
+      prendas = todosPrendas;
       cargando = false;
     });
   }
@@ -45,86 +51,120 @@ class _BuscarState extends State<Buscar> {
     final filtro = _controller.text.trim().toLowerCase();
 
     if (filtro.isEmpty) {
+      // Si no hay filtro, cargar todos los datos
       await _cargarDatos();
     } else {
       setState(() => cargando = true);
 
+      // Obtener las notas y prendas filtradas
       final notasFiltradas = await BdModel.obtenerNotasFiltradas(filtro);
-      final proveedoresFiltrados = await BdModel.obtenerProveedoresFiltrados(filtro);
+      final prendasFiltradas = await BdModel.obtenerPrendasFiltradas(filtro);
+
+      // Imprimir los resultados filtrados
+      print('Notas filtradas: $notasFiltradas');
+      print('Prendas filtradas: $prendasFiltradas');
 
       setState(() {
         notas = notasFiltradas;
-        proveedores = proveedoresFiltrados;
+        prendas = prendasFiltradas;
         cargando = false;
       });
     }
   }
 
-Widget _buildItem(String titulo, List<Map<String, dynamic>> items, IconData icon) {
-  if (items.isEmpty) {
-    return Center(
-      child: Text(
-        'No hay resultados en $titulo.',
-        style: const TextStyle(fontSize: 16, fontStyle: FontStyle.italic),
+  Future<void> _eliminarNota(String idNota) async {
+    final confirmacion = await showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Confirmación'),
+        content: const Text('¿Estás seguro de que quieres eliminar esta nota?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancelar'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Eliminar'),
+          ),
+        ],
       ),
     );
+
+    if (confirmacion == true) {
+      final int idNotaInt = int.tryParse(idNota) ?? -1;
+      if (idNotaInt != -1) {
+        await BdModel.eliminarNota(idNotaInt);
+        await _cargarDatos();
+      } else {
+        print('Error: idNota no es un entero válido.');
+      }
+    }
   }
 
-  return ListView.builder(
-    itemCount: items.length,
-    itemBuilder: (context, index) {
-      final item = items[index];
-      
-    final String idNota = item['idNota']?.toString() ?? "Desconocido";
-    final String nombreCliente = item['nombreCliente']?.toString() ?? "Sin Nombre";
-
-
-    final String idProveedor = item['idProveedor']?.toString() ?? "Desconocido";
-    final String nombreProveedor = item['nombreProveedor']?.toString() ?? "Sin Nombre";
-
-    String title;
-    String subtitle;
-
-    if (item.containsKey('idNota') && item.containsKey('nombreCliente')) {
-      title = "Nota #$idNota";
-      subtitle = "Nombre del cliente: $nombreCliente";
-    } else if (item.containsKey('idProveedor') && item.containsKey('nombreProveedor')) {
-
-      title = "Proveedor #$idProveedor";
-      subtitle = "Nombre del proveedor: $nombreProveedor";
-    } else {
-      title = "Desconocido";
-      subtitle = "Información no disponible";
+  // Método para construir la lista de items (Notas o Prendas)
+  Widget _buildItem(String titulo, List<Map<String, dynamic>> items, IconData icon) {
+    if (items.isEmpty) {
+      return Center(
+        child: Text(
+          'No hay resultados en $titulo.',
+          style: const TextStyle(fontSize: 16, fontStyle: FontStyle.italic),
+        ),
+      );
     }
 
-      return Padding(
-        padding: const EdgeInsets.symmetric(vertical: 6.0, horizontal: 10.0),
-        child: Card(
-          elevation: 3,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-          child: ListTile(
-            leading: Icon(icon, size: 36, color: Color.fromARGB(255, 72, 100, 122)),
-            title: Text(
-              title,
-              style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
+    return ListView.builder(
+      itemCount: items.length,
+      itemBuilder: (context, index) {
+        final item = items[index];
+
+        String title = "Desconocido";
+        String subtitle = "Información no disponible";
+
+        // Comprobación de si el item es una nota o una prenda
+        if (item.containsKey('idNota') && item.containsKey('nombreCliente')) {
+          final String idNota = item['idNota']?.toString() ?? "Desconocido";
+          final String nombreCliente = item['nombreCliente']?.toString() ?? "Sin Nombre";
+          title = "Nota #$idNota";
+          subtitle = "Nombre del cliente: $nombreCliente";
+        } else if (item.containsKey('idPrenda') && item.containsKey('nombrePrenda')) {
+          final String idPrenda = item['idPrenda']?.toString() ?? "Desconocido";
+          final String nombrePrenda = item['nombrePrenda']?.toString() ?? "Sin Nombre";
+          title = "Prenda #$idPrenda";
+          subtitle = "Nombre de la prenda: $nombrePrenda";
+        }
+
+        return Padding(
+          padding: const EdgeInsets.symmetric(vertical: 6.0, horizontal: 10.0),
+          child: Card(
+            elevation: 3,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            child: ListTile(
+              leading: Icon(icon, size: 36, color: Color.fromARGB(255, 72, 100, 122)),
+              title: Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
-            ),
-            subtitle: Text(
-              subtitle,
-              style: const TextStyle(
-                fontSize: 14,
-                color: Colors.grey,
+              subtitle: Text(
+                subtitle,
+                style: const TextStyle(
+                  fontSize: 14,
+                  color: Colors.grey,
+                ),
+              ),
+              trailing: IconButton(
+                icon: const Icon(Icons.delete, color: Colors.red),
+                onPressed: () => _eliminarNota(item['idNota']?.toString() ?? ""),
               ),
             ),
           ),
-        ),
-      );
-    },
-  );
-}
-
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -133,22 +173,22 @@ Widget _buildItem(String titulo, List<Map<String, dynamic>> items, IconData icon
         padding: const EdgeInsets.all(10.0),
         child: Column(
           children: [
-TextField(
-  controller: _controller,
-  decoration: InputDecoration(
-    labelText: 'Buscar',
-    border: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(8.0),
-      borderSide: BorderSide(
-        color: Colors.grey[100]!, // Gris más claro para el borde
-        width: 1.0, // Grosor del borde
-      ),
-    ),
-    prefixIcon: Icon(Icons.search),
-    filled: true, // Activa el fondo
-    fillColor: Color(0xFFF5F5F5), // Color gris claro para el fondo
-  ),
-),
+            TextField(
+              controller: _controller,
+              decoration: InputDecoration(
+                labelText: 'Buscar',
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8.0),
+                  borderSide: BorderSide(
+                    color: Colors.grey[100]!,
+                    width: 1.0,
+                  ),
+                ),
+                prefixIcon: Icon(Icons.search),
+                filled: true,
+                fillColor: Color(0xFFF5F5F5),
+              ),
+            ),
             const SizedBox(height: 20),
             cargando
                 ? const Center(child: CircularProgressIndicator())
@@ -177,14 +217,14 @@ TextField(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               const Text(
-                                'Proveedores',
+                                'Prendas',
                                 style: TextStyle(
                                   fontSize: 22,
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
                               const Divider(),
-                              Expanded(child: _buildItem('Proveedores', proveedores, Icons.store)),
+                              Expanded(child: _buildItem('Prendas', prendas, Icons.store)),
                             ],
                           ),
                         ),

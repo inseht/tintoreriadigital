@@ -90,16 +90,40 @@ static Future<void> insertarNotaYAsignarPrendas(Map<String, dynamic> nota, List<
   });
 }
 
-  static Future<List<Map<String, dynamic>>> obtenerNotasFiltradas(String filtro) async {
-    final db = await inicializarBD();
-    final List<Map<String, dynamic>> notas = await db.query(
-      'Notas',
-      where: 'nombreCliente LIKE ? OR telefonoCliente LIKE ? OR estado LIKE ?',
-      whereArgs: ['%$filtro%', '%$filtro%', '%$filtro%'],
-    );
-    await db.close();
-    return notas;
-  }
+static Future<List<Map<String, dynamic>>> obtenerNotasFiltradas(String filtro) async {
+  final db = await inicializarBD();
+  final List<Map<String, dynamic>> notas = await db.query(
+    'Notas',
+    where: 'nombreCliente LIKE ? OR telefonoCliente LIKE ? OR estado LIKE ?',
+    whereArgs: ['%$filtro%', '%$filtro%', '%$filtro%'],
+  );
+  await db.close();
+  return notas;
+}
+
+static Future<List<Map<String, dynamic>>> obtenerPrendasFiltradas(String filtro) async {
+  // Inicializamos la base de datos
+  final db = await inicializarBD();
+
+  // Convertimos el filtro a minúsculas para una búsqueda insensible a mayúsculas/minúsculas
+  final filtroLower = filtro.toLowerCase();
+
+  // Realizamos la consulta utilizando LIKE y pasamos el filtro con comodines (%)
+  final List<Map<String, dynamic>> prendas = await db.query(
+    'Prendas',
+    where: 'LOWER(tipo) LIKE ? OR LOWER(servicio) LIKE ? OR LOWER(color) LIKE ?',
+    whereArgs: ['%$filtroLower%', '%$filtroLower%', '%$filtroLower%'],
+  );
+
+  // Cerramos la base de datos después de la consulta
+  await db.close();
+
+  // Imprimimos los resultados para verificar que se están obteniendo correctamente
+  print('Prendas obtenidas con filtro: $prendas');
+
+  return prendas;
+}
+
 
   // Método para obtener proveedores filtrados por texto
   static Future<List<Map<String, dynamic>>> obtenerProveedoresFiltrados(String filtro) async {
@@ -388,17 +412,18 @@ static Future<List<Map<String, dynamic>>> obtenerNotasConPrendas() async {
     return eventos;
   }
 
-  static Future<void> agregarPrenda(Map<String, dynamic> prenda) async {
-    final db = await inicializarBD();
-    try {
-      await db.insert('Prendas', prenda);
-      print('Prenda agregada con éxito');
-    } catch (e) {
-      print('Error al agregar prenda: $e');
-    } finally {
-      await db.close();
-    }
+static Future<void> agregarPrenda(Map<String, dynamic> prenda) async {
+  final db = await inicializarBD();
+  try {
+    print('Intentando agregar la prenda: $prenda');
+    await db.insert('Prendas', prenda);
+    print('Prenda agregada con éxito');
+  } catch (e) {
+    print('Error al agregar prenda: $e');
+  } finally {
+    await db.close();
   }
+}
 
   static Future<void> eliminarNota(int idNota) async {
     final db = await inicializarBD();
@@ -415,5 +440,6 @@ static Future<void> actualizarPrenda(int idPrenda, Map<String, dynamic> datos) a
   final db = await inicializarBD();
   await db.update('Prendas', datos, where: 'idPrenda = ?', whereArgs: [idPrenda]);
 }
+  
   
 }

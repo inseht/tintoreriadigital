@@ -111,12 +111,12 @@ void _agregarPrenda() {
       _servicioSeleccionado != null && 
       precioUnitario > 0.0) {
     setState(() {
-      _prendas.add({
-        'tipo': _tipoPrendaSeleccionada,
-        'servicio': _servicioSeleccionado,
-        'precioUnitario': precioUnitario,
-        'colores': _color, 
-        'cantidad': _cantidadPrendas,
+  _prendas.add({
+    'tipo': _tipoPrendaSeleccionada,
+    'servicio': _servicioSeleccionado,
+    'precioUnitario': precioUnitario,
+    'colores': _color, 
+    'cantidad': _cantidadPrendas,
       });
 
       print('Prendas agregadas hasta ahora: $_prendas');
@@ -129,6 +129,8 @@ void _agregarPrenda() {
       _precioUnitarioController.clear();
       _color = null;
     });
+
+        print('Prendas agregadas: $_prendas');
   } else {
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Por favor, complete todos los campos de la prenda'))
@@ -149,21 +151,22 @@ void _crearNota() {
 
   double importeFinal = double.tryParse(_importeTotalController.text) ?? 0.0;
 
-  final Map<String, dynamic> nota = {
-    'nombreCliente': _nombreController.text,
-    'telefonoCliente': _telefonoController.text,
-    'fechaRecibido': _fechaInicio,
-    'fechaEstimada': _fechaFin,
-    'importe': importeFinal,
-    'estadoPago': _estadoPagoNota,
-    'prioridad': 1,
-    'observaciones': _observacionesController.text,
-    'estado': _estadoNota,
-  };
+final Map<String, dynamic> nota = {
+  'nombreCliente': _nombreController.text,
+  'telefonoCliente': _telefonoController.text,
+  'fechaRecibido': _fechaInicio,
+  'fechaEstimada': _fechaFin,
+  'importe': importeFinal,
+  'estadoPago': _estadoPagoNota,
+  'prioridad': 1,
+  'observaciones': _observacionesController.text,
+  'estado': _estadoNota,
+};
 
-  context.read<CrearNotaBloc>().add(EnviarFormulario(nota: nota, prendas: _prendas));
+
+context.read<CrearNotaBloc>().add(EnviarFormulario(nota: nota, prendas: _prendas));
+
   
-  // Llama a la función de limpiar formulario después de enviar
   _limpiarFormulario();
 }
 
