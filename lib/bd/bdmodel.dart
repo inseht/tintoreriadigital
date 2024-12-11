@@ -61,6 +61,8 @@ class BdModel {
     return db;
   }
 
+  
+
   static Future<void> insertarNotaYAsignarPrendas(Map<String, dynamic> nota, List<Map<String, dynamic>> prendas) async {
   final db = await inicializarBD();
   final dateFormat = DateFormat('dd/MM/yyyy');
@@ -150,33 +152,43 @@ static Future<void> imprimirPrendas() async {
   print('Prendas en la base de datos: $prendas');
 }
 
-
-static Future<void> crearNotaConPrendas(Map<String, dynamic> nota, List<Map<String, dynamic>> prendas) async {
+static Future<int> crearNotaConPrendas(Map<String, dynamic> nota, List<Map<String, dynamic>> prendas) async {
   final db = await inicializarBD();
-  final dateFormat = DateFormat('dd/MM/yyyy');
 
-  try {
-    final notaConFechas = {
-      ...nota,
-      'fechaRecibido': dateFormat.format(nota['fechaRecibido']),
-      'fechaEstimada': dateFormat.format(nota['fechaEstimada']),
-    };
-
-    print('Insertando nota: $notaConFechas');
-    int idNota = await db.insert('Notas', notaConFechas);
-    print('Nota insertada con id: $idNota');
-
-    // Asignar prendas directamente a la nota
-    for (var prenda in prendas) {
-      prenda['idNota'] = idNota;
-      print('Insertando prenda: $prenda');
-      await db.insert('Prendas', prenda);
+  // Convertir valores de tipos no compatibles a compatibles
+  final notaProcesada = nota.map((key, value) {
+    if (value is DateTime) {
+      return MapEntry(key, value.toIso8601String()); // Convertir DateTime a String
+    } else if (value == null) {
+      return MapEntry(key, ''); // Reemplazar valores nulos por una cadena vacía
+    } else {
+      return MapEntry(key, value);
     }
-  } catch (e) {
-    print('Error al crear la nota con prendas: $e');
+  });
+
+  // Insertar la nota en la base de datos
+  final idNota = await db.insert('Notas', notaProcesada);
+
+  // Procesar y asociar las prendas
+  for (final prenda in prendas) {
+    final prendaProcesada = prenda.map((key, value) {
+      if (value == null) {
+        return MapEntry(key, ''); // Reemplazar valores nulos
+      } else {
+        return MapEntry(key, value);
+      }
+    });
+    await db.insert('Prendas', {...prendaProcesada, 'idNota': idNota});
   }
+
+  return idNota;
 }
 
+
+static Future<List<Map<String, dynamic>>> obtenerPrendasSinNota() async {
+  final db = await inicializarBD();
+  return await db.query('Prendas', where: 'idNota IS NULL');
+}
 
   // mmmm
 
@@ -185,6 +197,7 @@ static Future<void> verificarPrendasNoAsignadas() async {
   final prendas = await db.query('Prendas', where: 'idNota IS NULL');
   print('Prendas no asignadas: $prendas');
 }
+
 
 
   static Future<List<Map<String, dynamic>>> obtenerPrendasNoAsignadas() async {
@@ -373,10 +386,10 @@ static Future<List<Map<String, dynamic>>> obtenerNotasConPrendas() async {
     await db.update('Notas', nuevaNota, where: 'idNota = ?', whereArgs: [idNota]);
   }
 
-  static Future<void> actualizarPrenda(int idPrenda, Map<String, dynamic> nuevaPrenda) async {
-    final db = await inicializarBD();
-    await db.update('Prendas', nuevaPrenda, where: 'idPrenda = ?', whereArgs: [idPrenda]);
-  }
+static Future<void> actualizarPrenda(int idPrenda, Map<String, dynamic> datos) async {
+  final db = await inicializarBD();
+  await db.update('Prendas', datos, where: 'idPrenda = ?', whereArgs: [idPrenda]);
+}
 
   
 }

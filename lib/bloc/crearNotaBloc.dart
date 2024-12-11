@@ -128,14 +128,25 @@ class CrearNotaBloc extends Bloc<CrearNotaEvent, CrearNotaState> {
 Future<void> _onEnviarFormulario(EnviarFormulario event, Emitter<CrearNotaState> emit) async {
   emit(CrearPrendaInProgress());
   try {
-    await BdModel.crearNotaConPrendas(event.nota, event.prendas);
+    // Guardar la nota en la base de datos
+    final idNota = await BdModel.crearNotaConPrendas(event.nota, event.prendas);
+
+    // Obtener prendas sin asociar
+    final prendasSinAsociar = await BdModel.obtenerPrendasSinNota();
+
+    // Asociar cada prenda sin nota a la última nota creada
+    for (final prenda in prendasSinAsociar) {
+      await BdModel.actualizarPrenda(prenda['idPrenda'], {'idNota': idNota});
+    }
+
     emit(FormularioEnviado()); 
     emit(CrearNotaInicial());
   } catch (e) {
-    emit(FormularioInvalido('Error al guardar la nota: $e'));
-    emit(CrearNotaInicial()); 
+    emit(FormularioInvalido('Error al guardar la nota o asociar prendas: $e'));
+    emit(CrearNotaInicial());
   }
 }
+
 
 
   Future<void> _onCrearPrendaSubmitted(CrearPrendaSubmitted event, Emitter<CrearNotaState> emit) async {
